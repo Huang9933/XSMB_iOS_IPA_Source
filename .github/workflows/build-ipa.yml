@@ -1,0 +1,65 @@
+name: Build XSMB Unsigned IPA
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, master]
+
+jobs:
+  build-ipa:
+    runs-on: macos-15
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download bundled offline JS libraries
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail --location --retry 3 --silent --show-error \
+            'https://cdn.tailwindcss.com/3.4.17' -o WebAssets/tailwind.js
+          curl --fail --location --retry 3 --silent --show-error \
+            'https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js' -o WebAssets/chart.umd.js
+          test $(wc -c < WebAssets/tailwind.js) -gt 10000
+          test $(wc -c < WebAssets/chart.umd.js) -gt 10000
+          echo "Offline JS assets downloaded"
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate Xcode project
+        run: xcodegen generate --spec project.yml
+
+      - name: Build unsigned iPhone app
+        shell: bash
+        run: |
+          set -euo pipefail
+          xcodebuild -project XSMBPredictor.xcodeproj \
+            -scheme XSMBPredictor -configuration Release \
+            -sdk iphoneos -destination 'generic/platform=iOS' \
+            -derivedDataPath build_output \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY='' \
+            build
+          test -d build_output/Build/Products/Release-iphoneos/XSMBPredictor.app
+          test -f build_output/Build/Products/Release-iphoneos/XSMBPredictor.app/WebAssets/index.html
+          test -s build_output/Build/Products/Release-iphoneos/XSMBPredictor.app/WebAssets/tailwind.js
+          test -s build_output/Build/Products/Release-iphoneos/XSMBPredictor.app/WebAssets/chart.umd.js
+
+      - name: Package unsigned IPA
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p ipa/Payload
+          cp -R build_output/Build/Products/Release-iphoneos/XSMBPredictor.app ipa/Payload/
+          cd ipa
+          zip -q -r ../XSMBPredictor-unsigned.ipa Payload
+
+      - name: Upload IPA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: XSMBPredictor-Unsigned-IPA
+          path: XSMBPredictor-unsigned.ipa
+          if-no-files-found: error
+          retention-days: 30
