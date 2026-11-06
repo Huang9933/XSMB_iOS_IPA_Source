@@ -47,6 +47,19 @@ jobs:
           test -s build_output/Build/Products/Release-iphoneos/XSMBPredictor.app/WebAssets/tailwind.js
           test -s build_output/Build/Products/Release-iphoneos/XSMBPredictor.app/WebAssets/chart.umd.js
 
+      - name: Validate app metadata before packaging
+        shell: bash
+        run: |
+          set -euo pipefail
+          APP="build_output/Build/Products/Release-iphoneos/XSMBPredictor.app"
+          PLIST="$APP/Info.plist"
+          /usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$PLIST"
+          /usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$PLIST"
+          /usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "$PLIST"
+          /usr/libexec/PlistBuddy -c 'Print :CFBundleExecutable' "$PLIST"
+          /usr/libexec/PlistBuddy -c 'Print :MinimumOSVersion' "$PLIST"
+          test -f "$APP/XSMBPredictor"
+
       - name: Package unsigned IPA
         shell: bash
         run: |
