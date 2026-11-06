@@ -1,0 +1,35 @@
+name: XSMBPredictor
+options:
+  bundleIdPrefix: com.huang9933
+  deploymentTarget:
+    iOS: "15.0"
+  xcodeVersion: "16.0"
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    CODE_SIGNING_ALLOWED: "NO"
+    CODE_SIGNING_REQUIRED: "NO"
+    CODE_SIGN_IDENTITY: ""
+    TARGETED_DEVICE_FAMILY: "1"
+    IPHONEOS_DEPLOYMENT_TARGET: "15.0"
+    ASSETCATALOG_COMPILER_APPICON_NAME: "AppIcon"
+targets:
+  XSMBPredictor:
+    type: application
+    platform: iOS
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.huang9933.xsmbpredictor
+        GENERATE_INFOPLIST_FILE: "YES"
+        INFOPLIST_KEY_CFBundleDisplayName: "XSMB Predictor"
+        INFOPLIST_KEY_UIRequiresFullScreen: "YES"
+        INFOPLIST_KEY_UILaunchScreen_Generation: "YES"
+        INFOPLIST_KEY_UIStatusBarStyle: UIStatusBarStyleLightContent
+    sources:
+      - path: App
+      - path: WebAssets
+        type: folder
+        buildPhase: resources
+        createIntermediateGroups: false
+    scheme:
+      testTargets: []

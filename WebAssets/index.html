@@ -1,0 +1,3430 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hệ Thống Phân Tích & Dự Đoán 2 Số Cuối Giải Đặc Biệt XSMB - soketqua.vn</title>
+  <script src="tailwind.js"></script>
+  <script src="chart.umd.js"></script>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif; }
+    input, select, textarea, button { font-size: max(16px, 1em); }
+    .num-ball {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-variant-numeric: tabular-nums;
+      transition: all 0.15s ease;
+    }
+    .num-ball:hover {
+      transform: translateY(-2px);
+    }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #0f172a; }
+    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen antialiased selection:bg-amber-500 selection:text-slate-950">
+
+  <!-- Toast Notification -->
+  <div id="toastContainer" class="fixed bottom-4 right-4 z-50 hidden">
+    <div class="bg-emerald-600 text-white px-4 py-3 rounded-xl shadow-xl border border-emerald-400/30 flex items-center gap-2 text-sm font-medium">
+      <span id="toastMessage">Đã cập nhật dữ liệu!</span>
+    </div>
+  </div>
+
+  <!-- Header -->
+  <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3.5 flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-red-600 flex items-center justify-center font-extrabold text-slate-950 text-lg shadow-lg shadow-amber-500/20">
+          ĐB
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-base sm:text-lg font-bold tracking-tight text-white">XSMB Predictor Pro</h1>
+            <span class="text-xs px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/30 font-medium">soketqua.vn</span>
+            <span class="text-xs px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 font-medium">v3 • tự dò cầu 2D/3D/4D</span>
+          </div>
+          <p class="text-xs text-slate-400">Dự đoán 2 số cuối Giải Đặc Biệt Miền Bắc bằng Tổ hợp Thống kê, Chuỗi Markov & Soi Cầu Ghép Giải</p>
+        </div>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <nav class="flex items-center gap-1 bg-slate-950/90 p-1 rounded-xl border border-slate-800 overflow-x-auto max-w-full">
+        <button id="tabBtnPredict" data-tab="predict" class="tab-btn px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold bg-amber-500 text-slate-950 transition">
+          Dự Đoán & Soi Cầu
+        </button>
+        <button id="tabBtnMultiSum" data-tab="multisum" class="tab-btn px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold text-emerald-300 hover:text-white border border-emerald-500/40 transition">
+          Siêu Cầu Cộng Tổng Đa Ngày
+        </button>
+        <button id="tabBtnVisual" data-tab="visual" class="tab-btn px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold text-amber-300 hover:text-white border border-amber-500/30 transition">
+          Vẽ Cầu Vị Trí & Phôi ĐB
+        </button>
+        <button id="tabBtnTail34" data-tab="tail34" class="tab-btn px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold text-fuchsia-300 hover:text-white border border-fuchsia-500/40 transition">
+          Dò Cầu 3 & 4 Số Đuôi (3D/4D)
+        </button>
+        <button id="tabBtnStats" data-tab="stats" class="tab-btn px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold text-slate-300 hover:text-white transition">
+          Biểu Đồ & Ma Trận 00–99
+        </button>
+        <button id="tabBtnBacktest" data-tab="backtest" class="tab-btn px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold text-slate-300 hover:text-white transition">
+          Kiểm Thử (Backtest)
+        </button>
+        <button id="tabBtnData" data-tab="data" class="tab-btn px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold text-slate-300 hover:text-white transition">
+          Sổ Kết Quả & Nhập Liệu
+        </button>
+        <button id="tabBtnCode" data-tab="code" class="tab-btn px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold text-slate-300 hover:text-white transition">
+          Mã Nguồn Python
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-6">
+
+    <!-- Top Summary Banner -->
+    <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex items-center justify-between">
+        <div>
+          <p class="text-xs text-slate-400 font-medium">Kỳ mở thưởng gần nhất</p>
+          <p id="latestDateLabel" class="text-sm font-semibold text-slate-200 mt-0.5">Thứ 6, 30/10/2026</p>
+          <p class="text-xs text-amber-400 mt-1">Giải Nhất: <span id="latestG1Label" class="font-mono font-bold">87081</span></p>
+        </div>
+        <div class="text-right">
+          <span class="text-xs uppercase tracking-wider text-slate-400 block">Giải ĐB</span>
+          <span id="latestDBLabel" class="text-xl font-extrabold font-mono text-white tracking-wider">692<span class="text-amber-400">59</span></span>
+        </div>
+      </div>
+
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex items-center justify-between">
+        <div>
+          <p class="text-xs text-slate-400 font-medium">Chạm Đầu / Đuôi Mạnh Nhất</p>
+          <p id="topTouchLabel" class="text-lg font-bold text-emerald-400 mt-1">Đầu 3, 6, 4 • Đuôi 1, 4, 8</p>
+          <p class="text-xs text-slate-400 mt-0.5">Hội tụ Tần suất + Markov + Cầu ĐB</p>
+        </div>
+        <div class="w-11 h-11 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-bold text-sm">
+          Chạm
+        </div>
+      </div>
+
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex items-center justify-between">
+        <div>
+          <p class="text-xs text-slate-400 font-medium">Tổng Đề Triển Vọng</p>
+          <p id="topSumLabel" class="text-lg font-bold text-sky-400 mt-1">Tổng 9, 5, 1</p>
+          <p id="longestGapSumLabel" class="text-xs text-slate-400 mt-0.5">Tổng gan nhất: Tổng 7 (26 ngày)</p>
+        </div>
+        <div class="w-11 h-11 rounded-xl bg-sky-500/10 border border-sky-500/30 flex items-center justify-center text-sky-400 font-bold text-sm">
+          Tổng
+        </div>
+      </div>
+
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex items-center justify-between">
+        <div>
+          <p class="text-xs text-slate-400 font-medium">Bạch Thủ Đề Hôm Nay</p>
+          <div id="top3Preview" class="flex items-center gap-2 mt-1.5"></div>
+          <p class="text-xs text-slate-400 mt-1">Tổ hợp điểm cao nhất / 100 số</p>
+        </div>
+        <button id="btnCopyTop10Quick" class="px-3 py-2 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 text-xs font-semibold transition">
+          Copy Dàn
+        </button>
+      </div>
+    </section>
+
+    <!-- TAB 1: PREDICT & SOI CAU -->
+    <section id="tabPanelPredict" class="space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+        <!-- Left Column: Model Weights & Signals (5 cols) -->
+        <div class="lg:col-span-5 space-y-5">
+          <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
+            <div class="flex items-center justify-between">
+              <div>
+                <h2 class="text-base font-bold text-white">Cấu Hình Trọng Số Mô Hình</h2>
+                <p class="text-xs text-slate-400">Điều chỉnh tỷ trọng 4 thuật toán để cập nhật dàn đề theo thời gian thực</p>
+              </div>
+              <button id="btnResetWeights" class="text-xs text-amber-400 hover:text-amber-300 font-medium underline">
+                Mặc định
+              </button>
+            </div>
+
+            <div class="space-y-3.5 pt-1">
+              <div>
+                <div class="flex justify-between text-xs mb-1">
+                  <span class="font-medium text-slate-200">1. Thống kê Tần suất Đầu / Đuôi / Tổng</span>
+                  <span id="valWeightFreq" class="font-mono text-amber-400 font-bold">30%</span>
+                </div>
+                <input id="sliderWeightFreq" type="range" min="0" max="100" value="30" class="w-full accent-amber-500 cursor-pointer" />
+              </div>
+
+              <div>
+                <div class="flex justify-between text-xs mb-1">
+                  <span class="font-medium text-slate-200">2. Chuỗi Markov (Xác suất chuyển trạng thái)</span>
+                  <span id="valWeightMarkov" class="font-mono text-amber-400 font-bold">30%</span>
+                </div>
+                <input id="sliderWeightMarkov" type="range" min="0" max="100" value="30" class="w-full accent-amber-500 cursor-pointer" />
+              </div>
+
+              <div>
+                <div class="flex justify-between text-xs mb-1">
+                  <span class="font-medium text-slate-200">3. Soi Cầu Ghép Giải (Tâm ĐB, G1, G7 & Bóng số)</span>
+                  <span id="valWeightBridge" class="font-mono text-amber-400 font-bold">25%</span>
+                </div>
+                <input id="sliderWeightBridge" type="range" min="0" max="100" value="25" class="w-full accent-amber-500 cursor-pointer" />
+              </div>
+
+              <div>
+                <div class="flex justify-between text-xs mb-1">
+                  <span class="font-medium text-slate-200">4. Chu kỳ rơi & Độ trễ (Đề Gan / Điểm rơi)</span>
+                  <span id="valWeightGap" class="font-mono text-amber-400 font-bold">15%</span>
+                </div>
+                <input id="sliderWeightGap" type="range" min="0" max="100" value="15" class="w-full accent-amber-500 cursor-pointer" />
+              </div>
+            </div>
+
+            <div class="pt-2 border-t border-slate-800 flex items-center justify-between">
+              <label class="flex items-center gap-2 text-xs text-slate-300 cursor-pointer">
+                <input id="chkPenalizeRecent" type="checkbox" checked class="rounded accent-amber-500" />
+                Giảm điểm các số vừa nổ trong 3 kỳ gần nhất
+              </label>
+              <span id="windowSizeBadge" class="text-xs font-mono text-slate-400">Biên độ: 30 kỳ</span>
+            </div>
+          </div>
+
+          <!-- Active Bridges Card -->
+          <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-3">
+            <h3 class="text-sm font-bold text-white flex items-center justify-between">
+              <span>Phân Tích Cầu Ghép & Bạc Nhớ Kỳ Này</span>
+              <span class="text-xs font-normal text-amber-400">Từ KQ ngày <span id="bridgeSourceDate">30/10/2026</span></span>
+            </h3>
+            <div id="bridgeAnalysisList" class="space-y-2.5 text-xs text-slate-300"></div>
+          </div>
+        </div>
+
+        <!-- Right Column: Prediction Output (7 cols) -->
+        <div class="lg:col-span-7 space-y-5">
+          <!-- Top 10 Ranked Candidates -->
+          <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <h2 class="text-base font-bold text-white">Top 10 Số Đề Điểm Cao Nhất (2 Số Cuối Giải ĐB)</h2>
+                <p class="text-xs text-slate-400">Nhấn vào từng con số để xem chi tiết điểm thành phần từ 4 mô hình</p>
+              </div>
+              <div class="flex items-center gap-2">
+                <select id="filterTouchSelect" class="bg-slate-950 border border-slate-700 rounded-xl px-2.5 py-1.5 text-xs text-slate-200">
+                  <option value="all">Tất cả Chạm (0–9)</option>
+                  <option value="0">Chạm 0</option>
+                  <option value="1">Chạm 1</option>
+                  <option value="2">Chạm 2</option>
+                  <option value="3">Chạm 3</option>
+                  <option value="4">Chạm 4</option>
+                  <option value="5">Chạm 5</option>
+                  <option value="6">Chạm 6</option>
+                  <option value="7">Chạm 7</option>
+                  <option value="8">Chạm 8</option>
+                  <option value="9">Chạm 9</option>
+                </select>
+              </div>
+            </div>
+
+            <div id="top10Grid" class="grid grid-cols-2 sm:grid-cols-5 gap-3"></div>
+
+            <!-- Selected Number Inspector -->
+            <div id="selectedNumDetail" class="bg-slate-950/90 border border-slate-800 rounded-xl p-4 text-xs space-y-2"></div>
+          </div>
+
+          <!-- Dan De Generator (10, 20, 36 so) -->
+          <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <div class="flex items-center gap-2">
+                <button data-dan="10" class="dan-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-500 text-slate-950 transition">Dàn 10 Số</button>
+                <button data-dan="20" class="dan-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-800 text-slate-300 hover:text-white transition">Dàn 20 Số</button>
+                <button data-dan="36" class="dan-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-800 text-slate-300 hover:text-white transition">Dàn 36 Số</button>
+              </div>
+              <button id="btnCopyDanText" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-amber-400 border border-slate-700 transition">
+                Sao chép dàn đang chọn
+              </button>
+            </div>
+
+            <div id="danNumbersBox" class="p-3.5 rounded-xl bg-slate-950 border border-slate-800 font-mono text-sm leading-relaxed text-amber-300 break-words"></div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+
+    
+    <!-- TAB 1.2: MULTI-POSITION & MULTI-DAY ADDITIVE BRIDGES -->
+    <section id="tabPanelMultiSum" class="hidden space-y-6">
+      <div id="bridgeStatusMulti" class="rounded-xl border border-slate-700 bg-slate-900/70 p-3 text-xs text-slate-300 leading-relaxed"></div>
+
+      <!-- Top Consensus Banner of Multi-Day Additive Bridges -->
+      <div class="bg-gradient-to-r from-slate-900 via-emerald-950/40 to-slate-900 border border-emerald-500/30 rounded-2xl p-5 space-y-4">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">Thuật Toán Nâng Cao • Cộng Tổng Modulo 10</span>
+              <h2 class="text-base sm:text-lg font-bold text-white">Siêu Cầu Cộng Tổng Đa Vị Trí & Đa Ngày (Kỳ t-1, t-2, t-3)</h2>
+            </div>
+            <p class="text-xs text-slate-300 mt-1">Quét tổ hợp <code class="text-amber-300">(Vị_trí_A[ngày t-k₁] + Vị_trí_B[ngày t-k₂] + Vị_trí_C[ngày t-k₃]) mod 10</code> trên 107 chữ số của 27 giải XSMB qua <span id="multiNDays">8</span> kỳ liên tiếp (<a href="https://soketqua.vn/" target="_blank" rel="noopener noreferrer" class="text-amber-400 underline">soketqua.vn</a>)</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="text-xs text-slate-400">Tổ hợp siêu cầu:</span>
+            <select id="selectMultiSumCombo" class="bg-slate-950 border border-emerald-500/50 rounded-xl px-3 py-2 text-xs text-emerald-300 font-semibold">
+              <option value="0">Tổ hợp #1 (Ăn thông 5 ngày • Hội tụ Tổng 5): Đầu 4 + Đuôi 1 = BTĐ 41 (STĐ 41-14)</option>
+              <option value="1">Tổ hợp #2 (Ăn thông 5 ngày • Hội tụ Tổng 7): Đầu 3 + Đuôi 4 = BTĐ 34 (STĐ 34-43)</option>
+              <option value="2">Tổ hợp #3 (Ăn thông 5 ngày • Hội tụ Đuôi 7): Đầu 4 + Đuôi 7 = BTĐ 47 (STĐ 47-74)</option>
+              <option value="3">Tổ hợp #4 (Ăn thông 4 ngày • Hội tụ Tổng 4): Đầu 3 + Đuôi 1 = BTĐ 31 (STĐ 31-13)</option>
+              <option value="4">Tổ hợp #5 (Ăn thông 4 ngày • Xuyên kỳ t-1 & t-3): Đầu 3 + Đuôi 7 = BTĐ 37 (STĐ 37-73)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- 4 Consensus KPI Pills -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-1">
+          <div class="bg-slate-950/90 border border-slate-800 rounded-xl p-3.5">
+            <span id="kpiDauTitle" class="text-xs text-slate-400 block">Hội tụ Đầu Đề</span>
+            <span id="kpiDauVal" class="text-base font-extrabold text-amber-400 mt-1 block">—</span>
+          </div>
+          <div class="bg-slate-950/90 border border-slate-800 rounded-xl p-3.5">
+            <span id="kpiDuoiTitle" class="text-xs text-slate-400 block">Hội tụ Đuôi Đề</span>
+            <span id="kpiDuoiVal" class="text-base font-extrabold text-emerald-400 mt-1 block">—</span>
+          </div>
+          <div class="bg-slate-950/90 border border-slate-800 rounded-xl p-3.5">
+            <span id="kpiTongTitle" class="text-xs text-slate-400 block">Hội tụ Tổng Đề</span>
+            <span id="kpiTongVal" class="text-base font-extrabold text-sky-400 mt-1 block">—</span>
+          </div>
+          <div class="bg-slate-950/90 border border-emerald-500/40 rounded-xl p-3.5">
+            <span id="kpiNguThuTitle" class="text-xs text-emerald-300 font-semibold block">Ngũ Thủ Đề Hội Tụ Đỉnh Cao</span>
+            <span id="kpiNguThuVal" class="text-lg font-black font-mono text-white mt-1 block tracking-wider">—</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Visual Circuit Diagram + 5-Day Verification Table for Selected Combo -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div class="lg:col-span-5 bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
+          <h3 class="text-sm font-bold text-white flex items-center justify-between">
+            <span>Sơ Đồ Mạch Cộng Tổng Xuyên Ngày (Kỳ <span id="circuitDate">31/10/2026</span>)</span>
+            <span class="text-xs text-emerald-400 font-mono">Modulo 10</span>
+          </h3>
+          <div id="multiSumCircuitBox" class="space-y-4"></div>
+        </div>
+
+        <div class="lg:col-span-7 bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <h3 class="text-sm font-bold text-white">Bảng Kiểm Chứng Đường Cầu Qua Các Ngày Liên Tiếp</h3>
+              <p class="text-xs text-slate-400">Đối chiếu từng chữ số ở Kỳ (t-1), Kỳ (t-2), Kỳ (t-3) cộng lại so với kết quả Giải Đặc Biệt thực tế</p>
+            </div>
+            <span id="multiSumComboBadge" class="px-3 py-1 rounded-lg bg-amber-500 text-slate-950 font-mono font-extrabold text-xs">BTĐ: 41</span>
+          </div>
+
+          <div class="overflow-x-auto border border-slate-800 rounded-xl">
+            <table class="w-full text-left border-collapse text-xs">
+              <thead>
+                <tr class="bg-slate-950 text-slate-400 border-b border-slate-800">
+                  <th class="p-2.5 font-semibold">Kỳ mở thưởng (Ngày t)</th>
+                  <th class="p-2.5 font-semibold">Phép cộng Đầu Đề (mod 10)</th>
+                  <th class="p-2.5 font-semibold">Phép cộng Đuôi Đề (mod 10)</th>
+                  <th class="p-2.5 font-semibold">Phép cộng Tổng (mod 10)</th>
+                  <th class="p-2.5 font-semibold">Số ghép</th>
+                  <th class="p-2.5 font-semibold">ĐB thực tế</th>
+                </tr>
+              </thead>
+              <tbody id="multiSumVerifyTableBody" class="divide-y divide-slate-800/70"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Interactive Custom Multi-Position & Multi-Day Formula Builder + Live Scanner -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+        <!-- Custom Formula Tester (6 cols) -->
+        <div class="lg:col-span-6 bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
+          <div>
+            <h3 class="text-base font-bold text-white">Phòng Thí Nghiệm Tự Ghép Công Thức Cộng Tổng Đa Ngày</h3>
+            <p class="text-xs text-slate-400">Chọn 2 hoặc 3 vị trí bất kỳ trên các giải và các ngày trễ khác nhau (t-1, t-2, t-3) để kiểm tra chuỗi cộng tổng</p>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-2">
+              <span class="text-xs font-bold text-amber-400 block">Toán hạng 1</span>
+              <select id="customLag1" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-slate-200">
+                <option value="1" selected>Kỳ (t-1) - Hôm trước</option>
+                <option value="2">Kỳ (t-2) - Cách 2 ngày</option>
+                <option value="3">Kỳ (t-3) - Cách 3 ngày</option>
+              </select>
+              <select id="customPos1" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-slate-200 font-mono"></select>
+            </div>
+
+            <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-2">
+              <span class="text-xs font-bold text-emerald-400 block">Toán hạng 2</span>
+              <select id="customLag2" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-slate-200">
+                <option value="1">Kỳ (t-1) - Hôm trước</option>
+                <option value="2" selected>Kỳ (t-2) - Cách 2 ngày</option>
+                <option value="3">Kỳ (t-3) - Cách 3 ngày</option>
+              </select>
+              <select id="customPos2" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-slate-200 font-mono"></select>
+            </div>
+
+            <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-2">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-sky-400">Toán hạng 3</span>
+                <label class="text-[11px] text-slate-400 flex items-center gap-1 cursor-pointer">
+                  <input id="chkUseTerm3" type="checkbox" checked class="accent-sky-500" /> Dùng
+                </label>
+              </div>
+              <select id="customLag3" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-slate-200">
+                <option value="1">Kỳ (t-1) - Hôm trước</option>
+                <option value="2">Kỳ (t-2) - Cách 2 ngày</option>
+                <option value="3" selected>Kỳ (t-3) - Cách 3 ngày</option>
+              </select>
+              <select id="customPos3" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-slate-200 font-mono"></select>
+            </div>
+          </div>
+
+          <div id="customFormulaOutput" class="p-3.5 rounded-xl bg-slate-950 border border-slate-800 text-xs space-y-2"></div>
+        </div>
+
+        <!-- Multi-Prize & Multi-Day Pascal Triangle Visualizer (6 cols) -->
+        <div class="lg:col-span-6 bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <h3 class="text-base font-bold text-white">Cầu Tam Giác Pascal Đa Giải & Xuyên Ngày</h3>
+              <p class="text-xs text-slate-400">Cộng dồn 2 chữ số liền kề (lấy hàng đơn vị mod 10) từ đỉnh xuống đáy tháp để bắt cặp số kết</p>
+            </div>
+            <select id="selectPascalMode" class="bg-slate-950 border border-amber-500/40 rounded-xl px-2.5 py-1.5 text-xs text-amber-300 font-semibold">
+              <option value="db_g1">Chuẩn: ĐB (30/10) + Giải Nhất (30/10)</option>
+              <option value="db_2days">Xuyên Ngày: ĐB (29/10) + ĐB (30/10)</option>
+              <option value="db_g1_g7">Đa Giải: ĐB (30/10) + G1 (30/10) + G7.1 (30/10)</option>
+              <option value="db_3days">Xuyên 3 Ngày: ĐB (28/10) + ĐB (29/10) + ĐB (30/10)</option>
+            </select>
+          </div>
+
+          <div id="pascalPyramidBox" class="p-4 rounded-xl bg-slate-950 border border-slate-800 overflow-x-auto text-center font-mono space-y-1"></div>
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- TAB 1.5: VISUAL BRIDGES (IMAGE 1 & IMAGE 2 STYLE) -->
+    <section id="tabPanelVisual" class="hidden space-y-8">
+      <div id="bridgeStatusVisual" class="rounded-xl border border-slate-700 bg-slate-900/70 p-3 text-xs text-slate-300 leading-relaxed"></div>
+
+      <!-- STYLE 1: SOI CAU VI TRI 27 GIAI (GIONG ANH 1) -->
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-red-500/20 text-red-400 border border-red-500/30">Kiểu 1 • Soi Cầu Vị Trí 2 Điểm</span>
+              <h2 class="text-base sm:text-lg font-bold text-white">Bảng Vẽ Cầu Vị Trí Tự Động Trên 107 Chữ Số KQXS (Giống Ảnh 1)</h2>
+            </div>
+            <p class="text-xs text-slate-400 mt-1">Hệ thống tự động quét 5.671 cặp vị trí trên bảng 27 giải XSMB từ <a href="https://soketqua.vn/" target="_blank" rel="noopener noreferrer" class="text-amber-400 underline">soketqua.vn</a> để tìm đường cầu ăn thông liên tiếp và vẽ đường nối trực quan</p>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-2">
+            <label for="selectPosBridge" class="text-xs text-slate-300 font-medium">Chọn đường cầu:</label>
+            <select id="selectPosBridge" class="bg-slate-950 border border-amber-500/50 rounded-xl px-3 py-2 text-xs text-amber-300 font-semibold">
+              <option value="0">Cầu 1: G6.1[2] + G6.1[3] (Ăn 01 → 59) ⇒ Báo 57 - 75</option>
+              <option value="1">Cầu 2: G7.2[2] + G7.4[2] (Ăn 01 → 59) ⇒ Báo 75 - 57</option>
+              <option value="2">Cầu 3: G1[5] + G6.1[3] (Ăn 01 → 59) ⇒ Báo 17 - 71</option>
+              <option value="3">Cầu 4: G1[5] + G3.4[2] (Ăn 01 → 59) ⇒ Báo 19 - 91</option>
+              <option value="4">Cầu 5: G3.4[2] + G6.1[2] (Ăn 01 → 59) ⇒ Báo 95 - 59</option>
+              <option value="5">Cầu Mẫu Ảnh 1: G3.6[3] + G6.1[3] (27/10→29/10: Ăn 75 → 01)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Bridge Explanation Strip -->
+        <div id="posBridgeSummaryBar" class="p-3.5 rounded-xl bg-slate-950 border border-slate-800 flex flex-wrap items-center justify-between gap-3 text-xs"></div>
+
+        <!-- Visual 3-Day Lottery Board Container with SVG Overlay -->
+        <div class="overflow-x-auto pb-2">
+          <div id="posBoardWrapper" class="relative min-w-[920px] bg-white text-slate-900 rounded-xl border-2 border-slate-300 shadow-xl overflow-hidden">
+            <svg id="posBridgeSvg" class="absolute inset-0 w-full h-full pointer-events-none z-20"></svg>
+            <div id="posBoardColumns" class="grid divide-x divide-slate-300 relative z-10"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- STYLE 2: PHOI CAU BANG DAC BIET & BO SO (GIONG ANH 2) -->
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-500/20 text-blue-400 border border-blue-500/30">Kiểu 2 • Phôi Cầu Bảng Đặc Biệt & Bộ Đề</span>
+              <h2 class="text-base sm:text-lg font-bold text-white">Phôi Bảng Đặc Biệt Nối Cầu Đường Cong & Chốt Bộ / STĐ (Giống Ảnh 2)</h2>
+            </div>
+            <p class="text-xs text-slate-400 mt-1">Vẽ đường cầu nối các vị trí chữ số Giải Đặc Biệt giữa các cột tuần để bắt Chạm/Đầu, Bộ Đề (8 số hoặc 4 số kép) và Song Thủ Đề (STĐ)</p>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-2">
+            <label for="selectMatrixBridge" class="text-xs text-slate-300 font-medium">Chọn phôi cầu ĐB:</label>
+            <select id="selectMatrixBridge" class="bg-slate-950 border border-sky-500/50 rounded-xl px-3 py-2 text-xs text-sky-300 font-semibold">
+              <option value="0">Phôi 1 (31/10 - Cầu Cách Dòng + Chạm): Đầu 5/7 • Bộ 02 • STĐ 57, 75</option>
+              <option value="1">Phôi 2 (31/10 - Cầu Thông 3 Kỳ Liên Tiếp): Chạm 3/8 • Bộ 33 • STĐ 38, 83</option>
+              <option value="2">Phôi 3 (31/10 - Cầu Ghép Bộ 12): Chạm 1/7 • Bộ 12 • STĐ 17, 71</option>
+              <option value="3">Phôi Mẫu Ảnh 2 (Kiểm chứng kỳ 30/10): Đầu 9 • Bộ 44 • STĐ 94, 99 (Đã nổ Đuôi 9 - Bộ 04/59)</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="matrixSummaryBar" class="p-3.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-300"></div>
+
+        <div class="overflow-x-auto pb-2">
+          <div id="matrixBoardWrapper" class="relative min-w-[880px] bg-[#fffdf7] text-slate-900 rounded-xl border-2 border-amber-700/40 shadow-xl overflow-hidden">
+            <svg id="matrixBridgeSvg" class="absolute inset-0 w-full h-full pointer-events-none z-20"></svg>
+            <div id="matrixBoardContent" class="grid grid-cols-12 relative z-10"></div>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- TAB 1.8: 3-DIGIT & 4-DIGIT TAIL BRIDGES (3 CANG / 4 CANG CAC GIAI) -->
+    <section id="tabPanelTail34" class="hidden space-y-6">
+      <div id="bridgeStatusTail34" class="rounded-xl border border-slate-700 bg-slate-900/70 p-3 text-xs text-slate-300 leading-relaxed"></div>
+
+      <!-- Control & Filter Bar -->
+      <div class="bg-gradient-to-r from-slate-900 via-fuchsia-950/35 to-slate-900 border border-fuchsia-500/30 rounded-2xl p-5 space-y-4">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-fuchsia-500/20 text-fuchsia-300 border border-fuchsia-500/40">Dò Cầu 3 Càng & 4 Càng Đa Giải</span>
+              <h2 class="text-base sm:text-lg font-bold text-white">Hệ Thống Tự Động Dò Cầu 3 Số Đuôi & 4 Số Đuôi Các Giải XSMB</h2>
+            </div>
+            <p class="text-xs text-slate-300 mt-1">Tự động quét tổ hợp 3 hoặc 4 vị trí chữ số trên bảng 107 chữ số KQXS ngày trước ghép thành 3 hoặc 4 số cuối của Giải ĐB, Giải Nhất, Giải 6 hoặc toàn bộ các giải ngày hôm sau (<a href="https://soketqua.vn/" target="_blank" rel="noopener noreferrer" class="text-amber-400 underline">soketqua.vn</a>)</p>
+          </div>
+          <button id="btnCopyTail34Dan" class="px-3.5 py-2 rounded-xl bg-fuchsia-500 hover:bg-fuchsia-400 text-slate-950 font-bold text-xs transition shadow">
+            Copy Dàn Số Đang Chọn
+          </button>
+        </div>
+
+        <!-- Filter Controls Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-1">
+          <div class="bg-slate-950/90 border border-slate-800 rounded-xl p-3 space-y-1.5">
+            <label for="selectTail34Len" class="text-xs text-slate-400 font-medium block">1. Chế độ số đuôi (3D / 4D)</label>
+            <select id="selectTail34Len" class="w-full bg-slate-900 border border-fuchsia-500/40 rounded-lg px-2.5 py-1.5 text-xs text-fuchsia-200 font-semibold">
+              <option value="3" selected>Cầu 3 Số Đuôi (3 Càng • 23 giải GĐB→G6)</option>
+              <option value="4">Cầu 4 Số Đuôi (4 Càng • 20 giải GĐB→G5)</option>
+            </select>
+          </div>
+
+          <div class="bg-slate-950/90 border border-slate-800 rounded-xl p-3 space-y-1.5">
+            <label for="selectTail34Scope" class="text-xs text-slate-400 font-medium block">2. Phạm vi giải mục tiêu</label>
+            <select id="selectTail34Scope" class="w-full bg-slate-900 border border-amber-500/40 rounded-lg px-2.5 py-1.5 text-xs text-amber-200 font-semibold">
+              <option value="all">Tất cả các giải (Lô 3 số / 4 số)</option>
+              <option value="db_g6" selected>Giải ĐB + Giải 6 (3 Càng ĐB & G6)</option>
+              <option value="db_g1">Giải ĐB + Giải Nhất</option>
+              <option value="db">Chỉ riêng Giải Đặc Biệt</option>
+            </select>
+          </div>
+
+          <div class="bg-slate-950/90 border border-slate-800 rounded-xl p-3 space-y-1.5">
+            <label for="selectTail34Order" class="text-xs text-slate-400 font-medium block">3. Kiểu ghép vị trí</label>
+            <select id="selectTail34Order" class="w-full bg-slate-900 border border-emerald-500/40 rounded-lg px-2.5 py-1.5 text-xs text-emerald-200 font-semibold">
+              <option value="perm" selected>Đảo / Hoán vị (Trúng bất kỳ thứ tự nào)</option>
+              <option value="exact">Thẳng thứ tự vị trí (A → B → C)</option>
+            </select>
+          </div>
+
+          <div class="bg-slate-950/90 border border-slate-800 rounded-xl p-3 space-y-1.5">
+            <label for="selectTail34Bridge" class="text-xs text-slate-400 font-medium block">4. Chọn đường cầu tiêu biểu</label>
+            <select id="selectTail34Bridge" class="w-full bg-slate-900 border border-sky-500/40 rounded-lg px-2.5 py-1.5 text-xs text-sky-200 font-semibold"></select>
+          </div>
+        </div>
+
+        <!-- 4 KPI Summary Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          <div class="bg-slate-950/90 border border-slate-800 rounded-xl p-3.5">
+            <span class="text-xs text-slate-400 block">Tổng số cầu phát hiện</span>
+            <span id="tail34KpiCount" class="text-base font-extrabold text-fuchsia-400 mt-1 block">—</span>
+          </div>
+          <div class="bg-slate-950/90 border border-slate-800 rounded-xl p-3.5">
+            <span class="text-xs text-slate-400 block">Chuỗi ăn thông dài nhất</span>
+            <span id="tail34KpiStreak" class="text-base font-extrabold text-amber-400 mt-1 block">—</span>
+          </div>
+          <div class="bg-slate-950/90 border border-slate-800 rounded-xl p-3.5">
+            <span class="text-xs text-slate-400 block">Cầu đang chọn (Bạch thủ thẳng)</span>
+            <span id="tail34KpiDirect" class="text-base font-extrabold font-mono text-emerald-400 mt-1 block">—</span>
+          </div>
+          <div class="bg-slate-950/90 border border-fuchsia-500/40 rounded-xl p-3.5">
+            <span class="text-xs text-fuchsia-300 font-semibold block">Top Cụm Số Hội Tụ Nhiều Cầu Nhất</span>
+            <span id="tail34KpiConsensus" class="text-sm font-black font-mono text-white mt-1 block tracking-wide">—</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Selected Bridge Verification & Permutations + Visual Board -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <!-- Left 5 cols: Bridge Formula, Permutation Set & Top Convergent Clusters -->
+        <div class="lg:col-span-5 space-y-5">
+          <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
+            <div class="flex items-center justify-between">
+              <h3 class="text-sm font-bold text-white">Chi Tiết Vị Trí & Dàn Hoán Vị Của Cầu</h3>
+              <span id="tail34ModeBadge" class="px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-fuchsia-500/20 text-fuchsia-300 border border-fuchsia-500/30">3D</span>
+            </div>
+            <div id="tail34DetailBox" class="space-y-3 text-xs"></div>
+          </div>
+
+          <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-3">
+            <div class="flex items-center justify-between">
+              <h3 class="text-sm font-bold text-white">Bảng Xếp Hạng Top 12 Cầu 3/4 Số Mạnh Nhất</h3>
+              <span class="text-[11px] text-slate-400">Nhấn để đổi cầu</span>
+            </div>
+            <div id="tail34TopListBox" class="space-y-2 max-h-80 overflow-y-auto pr-1"></div>
+          </div>
+        </div>
+
+        <!-- Right 7 cols: Day-by-day verification table & Prize tail reference -->
+        <div class="lg:col-span-7 space-y-5">
+          <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <h3 class="text-sm font-bold text-white">Lịch Sử Ăn Thông Qua Các Kỳ Của Đường Cầu</h3>
+                <p class="text-xs text-slate-400">Đối chiếu các chữ số tại vị trí cầu ngày (t) với 3/4 số đuôi các giải mở thưởng ngày (t+1)</p>
+              </div>
+              <span id="tail34TargetBadge" class="px-3 py-1 rounded-lg bg-amber-500 text-slate-950 font-mono font-extrabold text-xs">—</span>
+            </div>
+
+            <div class="overflow-x-auto border border-slate-800 rounded-xl">
+              <table class="w-full text-left border-collapse text-xs">
+                <thead>
+                  <tr class="bg-slate-950 text-slate-400 border-b border-slate-800">
+                    <th class="p-2.5 font-semibold">Ngày lấy cầu (t)</th>
+                    <th class="p-2.5 font-semibold">Chữ số tại các vị trí cầu</th>
+                    <th class="p-2.5 font-semibold">Số ghép thẳng</th>
+                    <th class="p-2.5 font-semibold">Ngày nổ (t+1)</th>
+                    <th class="p-2.5 font-semibold">Giải & Số đuôi trúng</th>
+                  </tr>
+                </thead>
+                <tbody id="tail34HistoryTableBody" class="divide-y divide-slate-800/70"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Visual 27-Prize Board highlighting the 3 or 4 bridge positions & hitting prizes -->
+          <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <h3 class="text-sm font-bold text-white">Bảng Trực Quan Vị Trí Cầu & Giải Trúng Qua Các Kỳ</h3>
+                <p class="text-xs text-slate-400">Khoanh tròn tím: các vị trí chữ số tạo cầu ở kỳ (t) • Tô sáng xanh/đỏ: đuôi 3/4 số của giải đã nổ ở kỳ (t+1)</p>
+              </div>
+            </div>
+            <div class="overflow-x-auto pb-2">
+              <div id="tail34BoardWrapper" class="relative min-w-[860px] bg-white text-slate-900 rounded-xl border-2 border-slate-300 shadow-xl overflow-hidden">
+                <div id="tail34BoardColumns" class="grid divide-x divide-slate-300 relative z-10"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Reference Table: All 3-Digit and 4-Digit Tails of Latest Draw -->
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <h3 class="text-sm font-bold text-white">Bảng Tổng Hợp 3 Số Đuôi (23 Giải) & 4 Số Đuôi (20 Giải) Kỳ Mới Nhất</h3>
+            <p class="text-xs text-slate-400">Tra cứu nhanh toàn bộ đuôi 3 càng, 4 càng của các giải từ Giải Đặc Biệt đến Giải Sáu</p>
+          </div>
+          <select id="selectTail34RefDay" class="bg-slate-950 border border-slate-700 rounded-xl px-3 py-1.5 text-xs text-slate-200 font-mono"></select>
+        </div>
+        <div id="tail34RefGrid" class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-2.5 text-xs"></div>
+      </div>
+    </section>
+
+    <!-- TAB 2: CHARTS & MATRIX 00-99 -->
+    <section id="tabPanelStats" class="hidden space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5">
+          <h3 class="text-sm font-bold text-white mb-1">Tần Suất Đầu Đề & Đuôi Đề (0–9)</h3>
+          <p class="text-xs text-slate-400 mb-4">Số lần xuất hiện ở hàng chục (Đầu) và hàng đơn vị (Đuôi) của 2 số cuối Giải ĐB</p>
+          <div class="relative h-72">
+            <canvas id="chartDauDuoi"></canvas>
+          </div>
+        </div>
+
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5">
+          <h3 class="text-sm font-bold text-white mb-1">Tần Suất & Độ Gan Của 10 Tổng Đề (0–9)</h3>
+          <p class="text-xs text-slate-400 mb-4">So sánh số lần về và số ngày chưa về (gan) của từng Tổng Đề</p>
+          <div class="relative h-72">
+            <canvas id="chartTongDe"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Full 00-99 Heatmap Matrix -->
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <h3 class="text-base font-bold text-white">Bảng Nhiệt Điểm Dự Đoán & Tần Suất 100 Số (00–99)</h3>
+            <p class="text-xs text-slate-400">Màu sắc thể hiện mức độ ưu tiên dự đoán hôm nay; dấu chấm xanh báo hiệu số đã nổ Đề trong 30 kỳ qua</p>
+          </div>
+          <div class="flex items-center gap-3 text-xs">
+            <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-amber-500 inline-block"></span> Top 10</span>
+            <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-emerald-600/60 inline-block"></span> Top 11–36</span>
+            <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-slate-800 inline-block"></span> Trung bình</span>
+          </div>
+        </div>
+        <div id="matrix100Grid" class="grid grid-cols-5 sm:grid-cols-10 gap-2"></div>
+      </div>
+    </section>
+
+    <!-- TAB 3: WALK-FORWARD BACKTEST -->
+    <section id="tabPanelBacktest" class="hidden space-y-6">
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 class="text-base font-bold text-white">Kiểm Thử Lịch Sử (Walk-Forward Backtesting)</h2>
+            <p class="text-xs text-slate-400">Giả lập tại mỗi ngày $t$, mô hình chỉ dùng các ngày trước đó ($t-1, t-2, \dots$) để dự đoán và đối chiếu với kết quả thực tế</p>
+          </div>
+          <button id="btnRunBacktest" class="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs transition">
+            Chạy Kiểm Thử Với Trọng Số Hiện Tại
+          </button>
+        </div>
+
+        <div id="backtestSummaryCards" class="grid grid-cols-1 sm:grid-cols-4 gap-4"></div>
+
+        <div class="overflow-x-auto border border-slate-800 rounded-xl">
+          <table class="w-full text-left border-collapse text-xs">
+            <thead>
+              <tr class="bg-slate-950 text-slate-400 border-b border-slate-800">
+                <th class="p-3 font-semibold">Ngày mở thưởng</th>
+                <th class="p-3 font-semibold">Giải ĐB thực tế</th>
+                <th class="p-3 font-semibold">Đề về</th>
+                <th class="p-3 font-semibold">Top 3 Chạm Đầu/Đuôi dự đoán</th>
+                <th class="p-3 font-semibold">Top 3 Tổng dự đoán</th>
+                <th class="p-3 font-semibold">Xếp hạng số thực tế</th>
+                <th class="p-3 font-semibold">Kết quả kiểm thử</th>
+              </tr>
+            </thead>
+            <tbody id="backtestTableBody" class="divide-y divide-slate-800/70"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 4: DATA & SOKETQUA PARSER -->
+    <section id="tabPanelData" class="hidden space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div class="lg:col-span-5 bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
+          <h3 class="text-base font-bold text-white">Nhập / Dán Kết Quả Mới Từ soketqua.vn</h3>
+          <p class="text-xs text-slate-400">Có 2 cách nhập. Mỗi lần thêm kỳ, mọi tab (Dự đoán, Thống kê, Siêu cầu cộng tổng, Cầu vị trí, Phôi ĐB) được dò lại và vẽ lại theo dữ liệu mới. Dữ liệu bạn nhập được lưu ngay trong trình duyệt này, mở lại vẫn còn.</p>
+
+          <div class="space-y-2">
+            <label class="text-xs font-semibold text-slate-300 block">Cách 1: Dán bảng kết quả từ <a href="https://soketqua.vn/" target="_blank" rel="noopener noreferrer" class="text-amber-400 underline">soketqua.vn</a> (1 hoặc nhiều ngày)</label>
+            <textarea id="rawSoketquaInput" rows="6" placeholder="Copy bảng kết quả XSMB (có dòng ngày dd/mm/yyyy và các giải ĐB, G1, G2 … G7) rồi dán vào đây.&#10;Ví dụ: XSMB Thứ 7, 31/10/2026&#10;ĐB 36149&#10;G1 51204&#10;G2 12345 67890&#10;... G7 12 45 89 03" class="w-full rounded-xl bg-slate-950 border border-slate-800 p-3 text-xs text-slate-200 font-mono focus:outline-none focus:border-amber-500"></textarea>
+            <button id="btnParseRawText" class="w-full py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs transition">
+              Tự Động Bóc Tách & Cập Nhật Tất Cả Cầu
+            </button>
+            <p class="text-[11px] text-slate-500">Dán nhiều ngày một lúc cũng được (cũ → mới hay mới → cũ đều tự xếp đúng thứ tự). Phải đủ cả 27 giải thì cầu vị trí và cầu cộng tổng mới cập nhật; chỉ có ĐB/G1/G7 thì Dự đoán, Thống kê và Phôi ĐB vẫn cập nhật.</p>
+          </div>
+
+          <div class="border-t border-slate-800 pt-4 space-y-3">
+            <label class="text-xs font-semibold text-slate-300 block">Cách 2: Nhập tay 1 kỳ quay</label>
+            <div class="grid grid-cols-2 gap-2.5">
+              <input id="inputManualDate" type="text" placeholder="Ngày (VD: 31/10/2026)" class="rounded-xl bg-slate-950 border border-slate-800 px-3 py-2 text-xs text-slate-200" />
+              <input id="inputManualDow" type="text" readonly placeholder="Thứ (tự tính)" class="rounded-xl bg-slate-900 border border-slate-800 px-3 py-2 text-xs text-slate-400" />
+              <input id="inputManualDB" type="text" maxlength="5" placeholder="Giải ĐB: 5 số" class="rounded-xl bg-slate-950 border border-slate-800 px-3 py-2 text-xs text-slate-200 font-mono" />
+              <input id="inputManualG1" type="text" maxlength="5" placeholder="Giải Nhất: 5 số" class="rounded-xl bg-slate-950 border border-slate-800 px-3 py-2 text-xs text-slate-200 font-mono" />
+            </div>
+            <input id="inputManualG2" type="text" placeholder="Giải 2: 2 số × 5 chữ số (VD: 71863 38253)" class="w-full rounded-xl bg-slate-950 border border-slate-800 px-3 py-2 text-xs text-slate-200 font-mono" />
+            <input id="inputManualG3" type="text" placeholder="Giải 3: 6 số × 5 chữ số" class="w-full rounded-xl bg-slate-950 border border-slate-800 px-3 py-2 text-xs text-slate-200 font-mono" />
+            <input id="inputManualG4" type="text" placeholder="Giải 4: 4 số × 4 chữ số" class="w-full rounded-xl bg-slate-950 border border-slate-800 px-3 py-2 text-xs text-slate-200 font-mono" />
+            <input id="inputManualG5" type="text" placeholder="Giải 5: 6 số × 4 chữ số" class="w-full rounded-xl bg-slate-950 border border-slate-800 px-3 py-2 text-xs text-slate-200 font-mono" />
+            <input id="inputManualG6" type="text" placeholder="Giải 6: 3 số × 3 chữ số" class="w-full rounded-xl bg-slate-950 border border-slate-800 px-3 py-2 text-xs text-slate-200 font-mono" />
+            <input id="inputManualG7" type="text" placeholder="Giải 7: 4 số × 2 chữ số (VD: 14 52 89 03)" class="w-full rounded-xl bg-slate-950 border border-slate-800 px-3 py-2 text-xs text-slate-200 font-mono" />
+            <p class="text-[11px] text-slate-500">Ngày mặc định là kỳ kế tiếp sau kỳ mới nhất. Bỏ trống Giải 2–6 nếu chỉ có ĐB, G1, G7 (khi đó các tab cầu vị trí / cộng tổng chưa cập nhật).</p>
+            <div class="flex flex-wrap gap-2">
+              <button id="btnAddManualRow" class="flex-1 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition">
+                Thêm Kỳ Quay
+              </button>
+              <button id="btnUndoLast" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold transition">
+                Hoàn tác kỳ vừa nhập
+              </button>
+              <button id="btnResetDataset" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold transition">
+                Xóa dữ liệu đã nhập
+              </button>
+            </div>
+          </div>
+          <div id="parseReport"></div>
+        </div>
+
+        <div class="lg:col-span-7 bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <h3 class="text-base font-bold text-white">Dữ Liệu Sổ Kết Quả XSMB (Nguồn: soketqua.vn)</h3>
+              <p class="text-xs text-slate-400">Tổng hợp Giải Đặc Biệt, Đầu, Đuôi, Tổng, Giải Nhất và Giải Bảy</p>
+            </div>
+            <input id="searchHistoryInput" type="text" placeholder="Tìm theo ngày hoặc số đề..." class="rounded-xl bg-slate-950 border border-slate-800 px-3 py-1.5 text-xs text-slate-200" />
+          </div>
+
+          <div class="overflow-x-auto max-h-96 border border-slate-800 rounded-xl">
+            <table class="w-full text-left border-collapse text-xs">
+              <thead class="sticky top-0 bg-slate-950 text-slate-400 border-b border-slate-800">
+                <tr>
+                  <th class="p-3 font-semibold">Ngày</th>
+                  <th class="p-3 font-semibold">Thứ</th>
+                  <th class="p-3 font-semibold">Giải ĐB</th>
+                  <th class="p-3 font-semibold">2 Số Cuối</th>
+                  <th class="p-3 font-semibold">Đầu - Đuôi - Tổng</th>
+                  <th class="p-3 font-semibold">Giải Nhất</th>
+                  <th class="p-3 font-semibold">Giải Bảy</th>
+                  <th class="p-3 font-semibold">Dữ liệu</th>
+                </tr>
+              </thead>
+              <tbody id="historyTableBody" class="divide-y divide-slate-800/70"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 5: PYTHON SOURCE CODE -->
+    <section id="tabPanelCode" class="hidden space-y-6">
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <h2 class="text-base font-bold text-white">Kiến Trúc Dự Án Python (`scraper.py` + `predictor.py`)</h2>
+            <p class="text-xs text-slate-400">Mã nguồn đầy đủ đã được đóng gói trong file <code class="text-amber-400">xsmb_predictor_project.zip</code> để bạn chạy trực tiếp trên máy cá nhân hoặc server</p>
+          </div>
+          <button id="btnCopyPythonCode" class="px-3 py-1.5 rounded-lg bg-amber-500 text-slate-950 font-bold text-xs transition">
+            Sao chép mã Python
+          </button>
+        </div>
+        <pre id="pythonCodeBlock" class="p-4 rounded-xl bg-slate-950 border border-slate-800 text-xs font-mono text-emerald-300 overflow-x-auto leading-relaxed"># Chạy dự án trên máy cá nhân:
+# 1. Giải nén xsmb_predictor_project.zip
+# 2. Cài đặt thư viện: pip install -r requirements.txt
+# 3. Chạy dự đoán: python3 predictor.py
+
+from scraper import fetch_from_soketqua
+from predictor import XSMBPredictor
+
+# Tự động tải KQXS mới nhất từ https://soketqua.vn/
+history = fetch_from_soketqua(live=True)
+model = XSMBPredictor(history)
+result = model.predict(w_freq=0.30, w_markov=0.30, w_bridge=0.25, w_gap=0.15)
+
+print("Top 10 Bạch Thủ Đề:", result["top_10"])
+print("Dàn Đề 20 số:", result["dan_20"])</pre>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    const INITIAL_DATA = [{"date": "30/10/2026", "dow": "Thứ 6", "db": "69259", "g1": "87081", "g7": ["94", "77", "48", "25"], "loto_count": 27, "de": "59", "dau": 5, "duoi": 9, "tong": 4}, {"date": "29/10/2026", "dow": "Thứ 5", "db": "53401", "g1": "47745", "g7": ["96", "49", "18", "55"], "loto_count": 27, "de": "01", "dau": 0, "duoi": 1, "tong": 1}, {"date": "28/10/2026", "dow": "Thứ 4", "db": "74175", "g1": "18190", "g7": ["58", "30", "05", "41"], "loto_count": 27, "de": "75", "dau": 7, "duoi": 5, "tong": 2}, {"date": "27/10/2026", "dow": "Thứ 3", "db": "44691", "g1": "89116", "g7": ["19", "41", "91", "06"], "loto_count": 27, "de": "91", "dau": 9, "duoi": 1, "tong": 0}, {"date": "26/10/2026", "dow": "Thứ 2", "db": "13221", "g1": "82697", "g7": ["92", "66", "69", "82"], "loto_count": 27, "de": "21", "dau": 2, "duoi": 1, "tong": 3}, {"date": "25/10/2026", "dow": "Chủ nhật", "db": "30328", "g1": "16643", "g7": ["52", "94", "82", "67"], "loto_count": 27, "de": "28", "dau": 2, "duoi": 8, "tong": 0}, {"date": "24/10/2026", "dow": "Thứ 7", "db": "45932", "g1": "53030", "g7": ["86", "57", "27", "49"], "loto_count": 27, "de": "32", "dau": 3, "duoi": 2, "tong": 5}, {"date": "23/10/2026", "dow": "Thứ 6", "db": "97067", "g1": "19688", "g7": ["70", "16", "53", "03"], "loto_count": 27, "de": "67", "dau": 6, "duoi": 7, "tong": 3}, {"date": "22/10/2026", "dow": "Thứ 5", "db": "25814", "g1": "12613", "g7": ["75", "17", "82", "21"], "loto_count": 27, "de": "14", "dau": 1, "duoi": 4, "tong": 5}, {"date": "21/10/2026", "dow": "Thứ 4", "db": "94163", "g1": "74291", "g7": ["42", "62", "94", "08"], "loto_count": 27, "de": "63", "dau": 6, "duoi": 3, "tong": 9}, {"date": "20/10/2026", "dow": "Thứ 3", "db": "86809", "g1": "92941", "g7": ["77", "90", "06", "32"], "loto_count": 27, "de": "09", "dau": 0, "duoi": 9, "tong": 9}, {"date": "19/10/2026", "dow": "Thứ 2", "db": "55390", "g1": "38166", "g7": ["04", "83", "55", "35"], "loto_count": 27, "de": "90", "dau": 9, "duoi": 0, "tong": 9}, {"date": "18/10/2026", "dow": "Chủ nhật", "db": "84642", "g1": "31053", "g7": ["44", "04", "67", "10"], "loto_count": 27, "de": "42", "dau": 4, "duoi": 2, "tong": 6}, {"date": "17/10/2026", "dow": "Thứ 7", "db": "64538", "g1": "25177", "g7": ["59", "49", "26", "01"], "loto_count": 27, "de": "38", "dau": 3, "duoi": 8, "tong": 1}, {"date": "16/10/2026", "dow": "Thứ 6", "db": "63756", "g1": "21598", "g7": ["42", "53", "92", "45"], "loto_count": 27, "de": "56", "dau": 5, "duoi": 6, "tong": 1}, {"date": "15/10/2026", "dow": "Thứ 5", "db": "62066", "g1": "87176", "g7": ["96", "27", "58", "91"], "loto_count": 27, "de": "66", "dau": 6, "duoi": 6, "tong": 2}, {"date": "14/10/2026", "dow": "Thứ 4", "db": "28259", "g1": "76463", "g7": ["04", "86", "69", "45"], "loto_count": 27, "de": "59", "dau": 5, "duoi": 9, "tong": 4}, {"date": "13/10/2026", "dow": "Thứ 3", "db": "53618", "g1": "54279", "g7": ["78", "95", "84", "51"], "loto_count": 27, "de": "18", "dau": 1, "duoi": 8, "tong": 9}, {"date": "12/10/2026", "dow": "Thứ 2", "db": "38287", "g1": "32680", "g7": ["49", "86", "38", "75"], "loto_count": 27, "de": "87", "dau": 8, "duoi": 7, "tong": 5}, {"date": "11/10/2026", "dow": "Chủ nhật", "db": "07363", "g1": "72224", "g7": ["53", "89", "06", "41"], "loto_count": 27, "de": "63", "dau": 6, "duoi": 3, "tong": 9}, {"date": "10/10/2026", "dow": "Thứ 7", "db": "82153", "g1": "06534", "g7": ["30", "71", "18", "43"], "loto_count": 27, "de": "53", "dau": 5, "duoi": 3, "tong": 8}, {"date": "09/10/2026", "dow": "Thứ 6", "db": "20635", "g1": "62182", "g7": ["02", "13", "03", "63"], "loto_count": 27, "de": "35", "dau": 3, "duoi": 5, "tong": 8}, {"date": "08/10/2026", "dow": "Thứ 5", "db": "43339", "g1": "24043", "g7": ["26", "35", "37", "06"], "loto_count": 27, "de": "39", "dau": 3, "duoi": 9, "tong": 2}, {"date": "07/10/2026", "dow": "Thứ 4", "db": "56488", "g1": "17838", "g7": ["48", "60", "14", "58"], "loto_count": 27, "de": "88", "dau": 8, "duoi": 8, "tong": 6}, {"date": "06/10/2026", "dow": "Thứ 3", "db": "12554", "g1": "26733", "g7": ["49", "97", "79", "70"], "loto_count": 27, "de": "54", "dau": 5, "duoi": 4, "tong": 9}, {"date": "05/10/2026", "dow": "Thứ 2", "db": "19654", "g1": "62219", "g7": ["44", "70", "72", "15"], "loto_count": 27, "de": "54", "dau": 5, "duoi": 4, "tong": 9}, {"date": "04/10/2026", "dow": "Chủ nhật", "db": "82951", "g1": "28235", "g7": ["90", "89", "26", "59"], "loto_count": 27, "de": "51", "dau": 5, "duoi": 1, "tong": 6}, {"date": "03/10/2026", "dow": "Thứ 7", "db": "77961", "g1": "59714", "g7": ["38", "43", "37", "27"], "loto_count": 27, "de": "61", "dau": 6, "duoi": 1, "tong": 7}, {"date": "02/10/2026", "dow": "Thứ 6", "db": "24483", "g1": "48799", "g7": ["84", "65", "87", "63"], "loto_count": 27, "de": "83", "dau": 8, "duoi": 3, "tong": 1}, {"date": "01/10/2026", "dow": "Thứ 5", "db": "40208", "g1": "92635", "g7": ["50", "15", "07", "04"], "loto_count": 27, "de": "08", "dau": 0, "duoi": 8, "tong": 8}];
+
+    let historyData = JSON.parse(JSON.stringify(INITIAL_DATA));
+    let currentDanSize = 10;
+    let selectedNumber = null;
+    let chartDauDuoiInstance = null;
+    let chartTongDeInstance = null;
+    let latestPredictionResult = null;
+
+    function showToast(msg) {
+      const container = document.getElementById('toastContainer');
+      const text = document.getElementById('toastMessage');
+      text.textContent = msg;
+      container.classList.remove('hidden');
+      setTimeout(() => {
+        container.classList.add('hidden');
+      }, 2600);
+    }
+
+    function copyTextToClipboard(text, label) {
+      if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.copyText) {
+        window.webkit.messageHandlers.copyText.postMessage(String(text));
+        showToast('Đã sao chép ' + label + '!');
+        return;
+      }
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+      textarea.style.position = 'fixed';
+      textarea.style.opacity = '0';
+      document.body.appendChild(textarea);
+      textarea.select();
+      try {
+        document.execCommand('copy');
+        showToast('Đã sao chép ' + label + ' vào bộ nhớ tạm!');
+      } catch (e) {
+        showToast('Không thể sao chép tự động.');
+      }
+      document.body.removeChild(textarea);
+    }
+
+    function computePredictionForSlice(sliceDesc, weights, penalizeRecent) {
+      const totalDays = Math.max(sliceDesc.length, 1);
+      const sliceAsc = [...sliceDesc].reverse();
+
+      const dauFreq = Array(10).fill(0);
+      const duoiFreq = Array(10).fill(0);
+      const tongFreq = Array(10).fill(0);
+
+      sliceDesc.forEach(r => {
+        dauFreq[r.dau]++;
+        duoiFreq[r.duoi]++;
+        tongFreq[r.tong]++;
+      });
+
+      const dauGap = Array(10).fill(totalDays);
+      const duoiGap = Array(10).fill(totalDays);
+      const tongGap = Array(10).fill(totalDays);
+
+      for (let d = 0; d < 10; d++) {
+        const idxDau = sliceDesc.findIndex(r => r.dau === d);
+        if (idxDau !== -1) dauGap[d] = idxDau;
+        const idxDuoi = sliceDesc.findIndex(r => r.duoi === d);
+        if (idxDuoi !== -1) duoiGap[d] = idxDuoi;
+        const idxTong = sliceDesc.findIndex(r => r.tong === d);
+        if (idxTong !== -1) tongGap[d] = idxTong;
+      }
+
+      // Markov Transition Matrices from sliceAsc
+      const dauTrans = Array.from({ length: 10 }, () => Array(10).fill(0));
+      const duoiTrans = Array.from({ length: 10 }, () => Array(10).fill(0));
+      const tongTrans = Array.from({ length: 10 }, () => Array(10).fill(0));
+
+      for (let i = 0; i < sliceAsc.length - 1; i++) {
+        const cur = sliceAsc[i];
+        const nxt = sliceAsc[i + 1];
+        dauTrans[cur.dau][nxt.dau]++;
+        duoiTrans[cur.duoi][nxt.duoi]++;
+        tongTrans[cur.tong][nxt.tong]++;
+      }
+
+      const latest = sliceDesc[0];
+      function normRow(row) {
+        const s = row.reduce((a, b) => a + b, 0);
+        return row.map(v => (v + 0.25) / (s + 2.5));
+      }
+
+      const mDau = normRow(dauTrans[latest.dau]);
+      const mDuoi = normRow(duoiTrans[latest.duoi]);
+      const mTong = normRow(tongTrans[latest.tong]);
+
+      // Bridge signals from latest draw
+      const dbDigits = latest.db.split('').map(Number);
+      const g1Digits = latest.g1.split('').map(Number);
+      const midDb = dbDigits[2];
+      const sumFirst2Db = (dbDigits[0] + dbDigits[1]) % 10;
+      const bongDau = (latest.dau + 5) % 10;
+      const bongDuoi = (latest.duoi + 5) % 10;
+
+      const bridgeScores = {};
+      const bridgeReasons = {};
+      for (let n = 0; n < 100; n++) {
+        const s = String(n).padStart(2, '0');
+        bridgeScores[s] = 0;
+        bridgeReasons[s] = [];
+        const d1 = Math.floor(n / 10);
+        const d2 = n % 10;
+        const t = (d1 + d2) % 10;
+
+        if (d1 === midDb || d2 === midDb) {
+          bridgeScores[s] += 0.25;
+          bridgeReasons[s].push('Chạm tâm ĐB (' + midDb + ')');
+        }
+        if (t === sumFirst2Db || d1 === sumFirst2Db || d2 === sumFirst2Db) {
+          bridgeScores[s] += 0.20;
+          bridgeReasons[s].push('Cầu tổng 2 số đầu ĐB (' + sumFirst2Db + ')');
+        }
+        if (d1 === g1Digits[3] || d1 === g1Digits[4] || d2 === g1Digits[3] || d2 === g1Digits[4]) {
+          bridgeScores[s] += 0.18;
+          bridgeReasons[s].push('Ghép đuôi Giải Nhất (' + latest.g1.slice(-2) + ')');
+        }
+        if (d1 === bongDau || d1 === bongDuoi || d2 === bongDau || d2 === bongDuoi) {
+          bridgeScores[s] += 0.15;
+          bridgeReasons[s].push('Bóng dương đề kỳ trước (' + bongDau + ', ' + bongDuoi + ')');
+        }
+      }
+
+      latest.g7.forEach(g7Val => {
+        if (bridgeScores[g7Val] !== undefined) {
+          bridgeScores[g7Val] += 0.22;
+          bridgeReasons[g7Val].push('Trùng sát Giải 7 (' + g7Val + ')');
+        }
+        const rev = g7Val.split('').reverse().join('');
+        if (bridgeScores[rev] !== undefined) {
+          bridgeScores[rev] += 0.18;
+          bridgeReasons[rev].push('Đảo Giải 7 (' + rev + ')');
+        }
+      });
+
+      function cycleBonus(gap) {
+        if (gap >= 4 && gap <= 9) return 0.85;
+        if (gap >= 2 && gap <= 3) return 0.60;
+        if (gap >= 10) return 0.75;
+        return 0.35;
+      }
+
+      const recentDeSet = new Set(sliceDesc.slice(0, 3).map(r => r.de));
+      const allDeCount = {};
+      sliceDesc.forEach(r => {
+        allDeCount[r.de] = (allDeCount[r.de] || 0) + 1;
+      });
+
+      const items = [];
+      for (let n = 0; n < 100; n++) {
+        const s = String(n).padStart(2, '0');
+        const d1 = Math.floor(n / 10);
+        const d2 = n % 10;
+        const t = (d1 + d2) % 10;
+
+        const freqScore = ((dauFreq[d1] / totalDays) * 0.4 + (duoiFreq[d2] / totalDays) * 0.4 + (tongFreq[t] / totalDays) * 0.2) * 4.0;
+        const markovScore = (mDau[d1] * 0.4 + mDuoi[d2] * 0.4 + mTong[t] * 0.2) * 4.0;
+        const bridgeScore = bridgeScores[s];
+        const gapScore = cycleBonus(dauGap[d1]) * 0.4 + cycleBonus(duoiGap[d2]) * 0.4 + cycleBonus(tongGap[t]) * 0.2;
+
+        let composite = (
+          weights.wFreq * freqScore +
+          weights.wMarkov * markovScore +
+          weights.wBridge * bridgeScore +
+          weights.wGap * gapScore
+        );
+
+        if (penalizeRecent && recentDeSet.has(s)) {
+          composite *= 0.78;
+        }
+
+        items.push({
+          num: s,
+          dau: d1,
+          duoi: d2,
+          tong: t,
+          score: Number((composite * 100).toFixed(2)),
+          freqPart: Number((freqScore * 25).toFixed(1)),
+          markovPart: Number((markovScore * 25).toFixed(1)),
+          bridgePart: Number((bridgeScore * 100).toFixed(1)),
+          gapPart: Number((gapScore * 100).toFixed(1)),
+          reasons: bridgeReasons[s],
+          appearedCount: allDeCount[s] || 0,
+          isRecent: recentDeSet.has(s)
+        });
+      }
+
+      const ranked = [...items].sort((a, b) => b.score - a.score);
+      const scoreMap = {};
+      items.forEach(it => { scoreMap[it.num] = it; });
+
+      const topDau = [0,1,2,3,4,5,6,7,8,9].sort((a, b) => {
+        const sa = items.filter(x => x.dau === a).reduce((acc, c) => acc + c.score, 0);
+        const sb = items.filter(x => x.dau === b).reduce((acc, c) => acc + c.score, 0);
+        return sb - sa;
+      });
+
+      const topDuoi = [0,1,2,3,4,5,6,7,8,9].sort((a, b) => {
+        const sa = items.filter(x => x.duoi === a).reduce((acc, c) => acc + c.score, 0);
+        const sb = items.filter(x => x.duoi === b).reduce((acc, c) => acc + c.score, 0);
+        return sb - sa;
+      });
+
+      const topTong = [0,1,2,3,4,5,6,7,8,9].sort((a, b) => {
+        const sa = items.filter(x => x.tong === a).reduce((acc, c) => acc + c.score, 0);
+        const sb = items.filter(x => x.tong === b).reduce((acc, c) => acc + c.score, 0);
+        return sb - sa;
+      });
+
+      return {
+        latest,
+        ranked,
+        scoreMap,
+        topDau,
+        topDuoi,
+        topTong,
+        dauFreq,
+        duoiFreq,
+        tongFreq,
+        dauGap,
+        duoiGap,
+        tongGap,
+        midDb,
+        sumFirst2Db,
+        bongDau,
+        bongDuoi
+      };
+    }
+
+    function getCurrentWeights() {
+      const rFreq = Number(document.getElementById('sliderWeightFreq').value);
+      const rMarkov = Number(document.getElementById('sliderWeightMarkov').value);
+      const rBridge = Number(document.getElementById('sliderWeightBridge').value);
+      const rGap = Number(document.getElementById('sliderWeightGap').value);
+      const sum = Math.max(rFreq + rMarkov + rBridge + rGap, 1);
+      return {
+        raw: { rFreq, rMarkov, rBridge, rGap },
+        wFreq: rFreq / sum,
+        wMarkov: rMarkov / sum,
+        wBridge: rBridge / sum,
+        wGap: rGap / sum
+      };
+    }
+
+    function renderSelectedNumberInspector(item, rankIdx) {
+      const box = document.getElementById('selectedNumDetail');
+      const reasonsHtml = item.reasons.length
+        ? item.reasons.map(r => `<span class="px-2 py-0.5 rounded-md bg-amber-500/15 text-amber-300 border border-amber-500/30">${r}</span>`).join(' ')
+        : '<span class="text-slate-400">Điểm hội tụ từ Tần suất và Ma trận chuyển trạng thái Markov</span>';
+
+      box.innerHTML = `
+        <div class="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-slate-800">
+          <div class="flex items-center gap-2.5">
+            <span class="w-9 h-9 rounded-xl bg-amber-500 text-slate-950 font-extrabold text-base flex items-center justify-center font-mono">${item.num}</span>
+            <div>
+              <p class="font-bold text-white text-sm">Phân tích chi tiết số <span class="text-amber-400 font-mono">${item.num}</span> (Hạng #${rankIdx + 1}/100)</p>
+              <p class="text-slate-400 text-xs">Đầu ${item.dau} • Đuôi ${item.duoi} • Tổng ${item.tong} • Đã về ĐB ${item.appearedCount} lần trong ${historyData.length} kỳ</p>
+            </div>
+          </div>
+          <span class="text-sm font-mono font-extrabold text-emerald-400">Tổng điểm: ${item.score}</span>
+        </div>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1">
+          <div class="bg-slate-900 p-2 rounded-lg border border-slate-800">
+            <span class="text-slate-400 block">Điểm Tần suất</span>
+            <span class="font-mono font-bold text-slate-200">${item.freqPart}</span>
+          </div>
+          <div class="bg-slate-900 p-2 rounded-lg border border-slate-800">
+            <span class="text-slate-400 block">Điểm Markov</span>
+            <span class="font-mono font-bold text-slate-200">${item.markovPart}</span>
+          </div>
+          <div class="bg-slate-900 p-2 rounded-lg border border-slate-800">
+            <span class="text-slate-400 block">Điểm Cầu Ghép</span>
+            <span class="font-mono font-bold text-amber-400">${item.bridgePart}</span>
+          </div>
+          <div class="bg-slate-900 p-2 rounded-lg border border-slate-800">
+            <span class="text-slate-400 block">Điểm Chu kỳ/Gan</span>
+            <span class="font-mono font-bold text-sky-400">${item.gapPart}</span>
+          </div>
+        </div>
+        <div class="pt-1 flex flex-wrap items-center gap-1.5">
+          <span class="text-slate-400 font-medium">Tín hiệu cầu:</span>
+          ${reasonsHtml}
+        </div>
+      `;
+    }
+
+    function updateAllViews() {
+      const weights = getCurrentWeights();
+      document.getElementById('valWeightFreq').textContent = Math.round(weights.wFreq * 100) + '%';
+      document.getElementById('valWeightMarkov').textContent = Math.round(weights.wMarkov * 100) + '%';
+      document.getElementById('valWeightBridge').textContent = Math.round(weights.wBridge * 100) + '%';
+      document.getElementById('valWeightGap').textContent = Math.round(weights.wGap * 100) + '%';
+      document.getElementById('windowSizeBadge').textContent = 'Biên độ: ' + historyData.length + ' kỳ';
+
+      const penalizeRecent = document.getElementById('chkPenalizeRecent').checked;
+      const res = computePredictionForSlice(historyData, weights, penalizeRecent);
+      latestPredictionResult = res;
+
+      // Top summary banner
+      const latest = res.latest;
+      document.getElementById('latestDateLabel').textContent = latest.dow + ', ' + latest.date;
+      document.getElementById('latestG1Label').textContent = latest.g1;
+      document.getElementById('latestDBLabel').innerHTML = latest.db.slice(0, 3) + '<span class="text-amber-400">' + latest.de + '</span>';
+      document.getElementById('topTouchLabel').textContent =
+        'Đầu ' + res.topDau.slice(0, 3).join(', ') + ' • Đuôi ' + res.topDuoi.slice(0, 3).join(', ');
+      document.getElementById('topSumLabel').textContent =
+        'Tổng ' + res.topTong.slice(0, 3).join(', ');
+
+      let maxGapSum = 0;
+      let maxGapVal = -1;
+      res.tongGap.forEach((gap, t) => {
+        if (gap > maxGapVal) {
+          maxGapVal = gap;
+          maxGapSum = t;
+        }
+      });
+      document.getElementById('longestGapSumLabel').textContent =
+        `Tổng gan nhất: Tổng ${maxGapSum} (${maxGapVal} kỳ chưa về)`;
+
+      // Top 3 preview balls
+      const top3Preview = document.getElementById('top3Preview');
+      top3Preview.innerHTML = res.ranked.slice(0, 3).map((it, idx) => `
+        <span class="num-ball px-2.5 py-1 rounded-lg font-mono font-extrabold text-sm ${idx === 0 ? 'bg-amber-500 text-slate-950' : 'bg-slate-800 text-amber-300 border border-amber-500/30'}">
+          ${it.num}
+        </span>
+      `).join('');
+
+      // Bridge analysis summary
+      document.getElementById('bridgeSourceDate').textContent = latest.date;
+      document.getElementById('bridgeAnalysisList').innerHTML = `
+        <div class="p-2.5 rounded-xl bg-slate-950 border border-slate-800 flex items-start justify-between gap-2">
+          <div>
+            <span class="font-semibold text-amber-400 block">1. Cầu Tâm Giải Đặc Biệt (${latest.db})</span>
+            <span class="text-slate-400">Chữ số chính giữa Giải ĐB là <strong>${res.midDb}</strong> → Báo hiệu Chạm <strong>${res.midDb}</strong> cho kỳ tiếp theo.</span>
+          </div>
+          <span class="font-mono font-bold text-amber-300 bg-amber-500/10 px-2 py-0.5 rounded">Chạm ${res.midDb}</span>
+        </div>
+        <div class="p-2.5 rounded-xl bg-slate-950 border border-slate-800 flex items-start justify-between gap-2">
+          <div>
+            <span class="font-semibold text-sky-400 block">2. Cầu Tổng 2 Số Đầu Giải ĐB (${latest.db.slice(0,2)})</span>
+            <span class="text-slate-400">${latest.db[0]} + ${latest.db[1]} = <strong>${res.sumFirst2Db}</strong> → Ưu tiên Tổng <strong>${res.sumFirst2Db}</strong> hoặc Chạm <strong>${res.sumFirst2Db}</strong>.</span>
+          </div>
+          <span class="font-mono font-bold text-sky-300 bg-sky-500/10 px-2 py-0.5 rounded">Tổng/Chạm ${res.sumFirst2Db}</span>
+        </div>
+        <div class="p-2.5 rounded-xl bg-slate-950 border border-slate-800 flex items-start justify-between gap-2">
+          <div>
+            <span class="font-semibold text-emerald-400 block">3. Cầu Ghép Giải Nhất (${latest.g1}) & Giải Bảy</span>
+            <span class="text-slate-400">2 số cuối Giải Nhất (<strong>${latest.g1.slice(-2)}</strong>) và bộ Giải Bảy (<strong>${latest.g7.join(', ')}</strong>) cung cấp chạm ghép chủ lực.</span>
+          </div>
+          <span class="font-mono font-bold text-emerald-300 bg-emerald-500/10 px-2 py-0.5 rounded">G1: ${latest.g1.slice(-2)}</span>
+        </div>
+        <div class="p-2.5 rounded-xl bg-slate-950 border border-slate-800 flex items-start justify-between gap-2">
+          <div>
+            <span class="font-semibold text-purple-400 block">4. Cầu Bóng Dương Đề Kỳ Trước (${latest.de})</span>
+            <span class="text-slate-400">Bóng dương của ${latest.dau} và ${latest.duoi} là <strong>${res.bongDau}</strong> và <strong>${res.bongDuoi}</strong>.</span>
+          </div>
+          <span class="font-mono font-bold text-purple-300 bg-purple-500/10 px-2 py-0.5 rounded">Bóng ${res.bongDau}-${res.bongDuoi}</span>
+        </div>
+      `;
+
+      // Filter & render Top 10 Grid
+      const touchFilter = document.getElementById('filterTouchSelect').value;
+      const filteredRanked = touchFilter === 'all'
+        ? res.ranked
+        : res.ranked.filter(it => String(it.dau) === touchFilter || String(it.duoi) === touchFilter);
+
+      const top10Slice = filteredRanked.slice(0, 10);
+      if (!selectedNumber || !res.scoreMap[selectedNumber]) {
+        selectedNumber = top10Slice[0] ? top10Slice[0].num : res.ranked[0].num;
+      }
+
+      const top10Grid = document.getElementById('top10Grid');
+      top10Grid.innerHTML = top10Slice.map((it, idx) => {
+        const isSelected = it.num === selectedNumber;
+        return `
+          <button data-num="${it.num}" class="top-num-card text-left p-3 rounded-xl border transition ${
+            isSelected
+              ? 'bg-amber-500/15 border-amber-400 ring-1 ring-amber-400'
+              : 'bg-slate-950 border-slate-800 hover:border-slate-700'
+          }">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-semibold text-slate-400">#${idx + 1}</span>
+              <span class="text-[11px] font-mono text-emerald-400 font-semibold">${it.score}đ</span>
+            </div>
+            <div class="text-2xl font-extrabold font-mono text-white my-1 tracking-wider">${it.num}</div>
+            <div class="text-[11px] text-slate-400 truncate">Tổng ${it.tong} • ${it.reasons[0] || 'Markov+Tần suất'}</div>
+          </button>
+        `;
+      }).join('');
+
+      document.querySelectorAll('.top-num-card').forEach(btn => {
+        btn.addEventListener('click', () => {
+          selectedNumber = btn.getAttribute('data-num');
+          updateAllViews();
+        });
+      });
+
+      const fullRankIdx = res.ranked.findIndex(x => x.num === selectedNumber);
+      renderSelectedNumberInspector(res.scoreMap[selectedNumber], fullRankIdx);
+
+      // Update Dan De Box
+      const danList = res.ranked.slice(0, currentDanSize).map(x => x.num);
+      document.getElementById('danNumbersBox').textContent = danList.join(', ');
+
+      // Update Matrix 00-99
+      renderMatrix100(res);
+
+      // Update Charts if initialized
+      renderCharts(res);
+    }
+
+    function renderMatrix100(res) {
+      const rankLookup = {};
+      res.ranked.forEach((it, idx) => { rankLookup[it.num] = idx; });
+
+      const grid = document.getElementById('matrix100Grid');
+      let html = '';
+      for (let n = 0; n < 100; n++) {
+        const s = String(n).padStart(2, '0');
+        const it = res.scoreMap[s];
+        const rIdx = rankLookup[s];
+        let bgClass = 'bg-slate-950 border-slate-800 text-slate-300';
+        if (rIdx < 10) {
+          bgClass = 'bg-amber-500 text-slate-950 font-bold border-amber-400';
+        } else if (rIdx < 36) {
+          bgClass = 'bg-emerald-900/40 border-emerald-500/40 text-emerald-200 font-semibold';
+        }
+
+        html += `
+          <button data-matrix-num="${s}" class="matrix-cell p-2 rounded-xl border ${bgClass} flex flex-col items-center justify-center relative transition hover:scale-105">
+            <span class="font-mono text-sm">${s}</span>
+            <span class="text-[10px] opacity-80 font-mono">${it.score}đ</span>
+            ${it.appearedCount > 0 ? `<span class="absolute top-1 right-1 w-2 h-2 rounded-full ${rIdx < 10 ? 'bg-slate-950' : 'bg-emerald-400'}" title="Đã nổ ${it.appearedCount} lần"></span>` : ''}
+          </button>
+        `;
+      }
+      grid.innerHTML = html;
+
+      document.querySelectorAll('.matrix-cell').forEach(cell => {
+        cell.addEventListener('click', () => {
+          selectedNumber = cell.getAttribute('data-matrix-num');
+          switchTab('predict');
+          updateAllViews();
+        });
+      });
+    }
+
+    function renderCharts(res) {
+      const labels = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+      const ctx1 = document.getElementById('chartDauDuoi').getContext('2d');
+      if (chartDauDuoiInstance) chartDauDuoiInstance.destroy();
+      chartDauDuoiInstance = new Chart(ctx1, {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [
+            {
+              label: 'Số lần về Đầu Đề',
+              data: res.dauFreq,
+              backgroundColor: 'rgba(245, 158, 11, 0.8)',
+              borderRadius: 6
+            },
+            {
+              label: 'Số lần về Đuôi Đề',
+              data: res.duoiFreq,
+              backgroundColor: 'rgba(16, 185, 129, 0.8)',
+              borderRadius: 6
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { labels: { color: '#cbd5e1', font: { size: 11 } } }
+          },
+          scales: {
+            x: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(51,65,85,0.3)' } },
+            y: { beginAtZero: true, ticks: { color: '#94a3b8', stepSize: 1 }, grid: { color: 'rgba(51,65,85,0.3)' } }
+          }
+        }
+      });
+
+      const ctx2 = document.getElementById('chartTongDe').getContext('2d');
+      if (chartTongDeInstance) chartTongDeInstance.destroy();
+      chartTongDeInstance = new Chart(ctx2, {
+        type: 'bar',
+        data: {
+          labels: labels.map(l => 'Tổng ' + l),
+          datasets: [
+            {
+              label: 'Số lần về (30 kỳ)',
+              data: res.tongFreq,
+              backgroundColor: 'rgba(56, 189, 248, 0.8)',
+              borderRadius: 6
+            },
+            {
+              label: 'Số ngày chưa về (Gan)',
+              data: res.tongGap,
+              backgroundColor: 'rgba(244, 63, 94, 0.75)',
+              borderRadius: 6
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { labels: { color: '#cbd5e1', font: { size: 11 } } }
+          },
+          scales: {
+            x: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(51,65,85,0.3)' } },
+            y: { beginAtZero: true, ticks: { color: '#94a3b8' }, grid: { color: 'rgba(51,65,85,0.3)' } }
+          }
+        }
+      });
+    }
+
+    function runWalkForwardBacktest() {
+      const weights = getCurrentWeights();
+      const penalizeRecent = document.getElementById('chkPenalizeRecent').checked;
+      const testCount = Math.min(15, historyData.length - 10);
+      const rows = [];
+
+      let hitTouchCount = 0;
+      let hitSumCount = 0;
+      let hitDan36Count = 0;
+
+      for (let idx = 0; idx < testCount; idx++) {
+        const targetDraw = historyData[idx];
+        const priorSlice = historyData.slice(idx + 1);
+        const sim = computePredictionForSlice(priorSlice, weights, penalizeRecent);
+
+        const actualDe = targetDraw.de;
+        const actualDau = targetDraw.dau;
+        const actualDuoi = targetDraw.duoi;
+        const actualTong = targetDraw.tong;
+
+        const rankPos = sim.ranked.findIndex(x => x.num === actualDe) + 1;
+        const top3Dau = sim.topDau.slice(0, 3);
+        const top3Duoi = sim.topDuoi.slice(0, 3);
+        const top3Tong = sim.topTong.slice(0, 3);
+
+        const hitTouch = top3Dau.includes(actualDau) || top3Duoi.includes(actualDuoi);
+        const hitSum = top3Tong.includes(actualTong);
+        const hitDan36 = rankPos <= 36;
+
+        if (hitTouch) hitTouchCount++;
+        if (hitSum) hitSumCount++;
+        if (hitDan36) hitDan36Count++;
+
+        rows.push({
+          date: targetDraw.date,
+          dow: targetDraw.dow,
+          db: targetDraw.db,
+          de: actualDe,
+          touchPred: `Đầu ${top3Dau.join(',')} | Đuôi ${top3Duoi.join(',')}`,
+          sumPred: `Tổng ${top3Tong.join(', ')}`,
+          rankPos,
+          hitTouch,
+          hitSum,
+          hitDan36
+        });
+      }
+
+      document.getElementById('backtestSummaryCards').innerHTML = `
+        <div class="bg-slate-950 border border-slate-800 rounded-xl p-3.5">
+          <span class="text-xs text-slate-400 block">Số kỳ kiểm thử độc lập</span>
+          <span class="text-xl font-extrabold text-white mt-1 block">${testCount} kỳ gần nhất</span>
+        </div>
+        <div class="bg-slate-950 border border-slate-800 rounded-xl p-3.5">
+          <span class="text-xs text-slate-400 block">Tỷ lệ trúng Chạm (Top 3 Đầu/Đuôi)</span>
+          <span class="text-xl font-extrabold text-emerald-400 mt-1 block">${hitTouchCount}/${testCount} (${Math.round(hitTouchCount / testCount * 100)}%)</span>
+        </div>
+        <div class="bg-slate-950 border border-slate-800 rounded-xl p-3.5">
+          <span class="text-xs text-slate-400 block">Tỷ lệ trúng Dàn 36 Số</span>
+          <span class="text-xl font-extrabold text-amber-400 mt-1 block">${hitDan36Count}/${testCount} (${Math.round(hitDan36Count / testCount * 100)}%)</span>
+        </div>
+        <div class="bg-slate-950 border border-slate-800 rounded-xl p-3.5">
+          <span class="text-xs text-slate-400 block">Tỷ lệ trúng Top 3 Tổng Đề</span>
+          <span class="text-xl font-extrabold text-sky-400 mt-1 block">${hitSumCount}/${testCount} (${Math.round(hitSumCount / testCount * 100)}%)</span>
+        </div>
+      `;
+
+      document.getElementById('backtestTableBody').innerHTML = rows.map(r => `
+        <tr class="hover:bg-slate-950/60">
+          <td class="p-3 font-medium text-slate-200">${r.dow}, ${r.date}</td>
+          <td class="p-3 font-mono text-slate-300">${r.db}</td>
+          <td class="p-3"><span class="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-mono font-bold">${r.de}</span></td>
+          <td class="p-3 font-mono text-slate-300">${r.touchPred}</td>
+          <td class="p-3 font-mono text-slate-300">${r.sumPred}</td>
+          <td class="p-3 font-mono font-semibold ${r.rankPos <= 36 ? 'text-emerald-400' : 'text-slate-400'}">Hạng #${r.rankPos}/100</td>
+          <td class="p-3 space-x-1">
+            ${r.hitDan36 ? '<span class="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-semibold">Trúng Dàn 36</span>' : ''}
+            ${r.hitTouch ? '<span class="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-semibold">Trúng Chạm</span>' : ''}
+            ${r.hitSum ? '<span class="px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-300 font-semibold">Trúng Tổng</span>' : ''}
+            ${(!r.hitDan36 && !r.hitTouch && !r.hitSum) ? '<span class="text-slate-500">Trượt</span>' : ''}
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function renderHistoryTable() {
+      const q = document.getElementById('searchHistoryInput').value.trim().toLowerCase();
+      const fullSet = new Set(fullDraws.map(d => d.date));
+      const filtered = historyData.filter(r =>
+        r.date.toLowerCase().includes(q) ||
+        r.db.includes(q) ||
+        r.de.includes(q) ||
+        r.dow.toLowerCase().includes(q)
+      );
+
+      document.getElementById('historyTableBody').innerHTML = filtered.map(r => `
+        <tr class="hover:bg-slate-950/60">
+          <td class="p-3 font-mono font-medium text-slate-200">${r.date}</td>
+          <td class="p-3 text-slate-400">${r.dow}</td>
+          <td class="p-3 font-mono text-slate-200">${r.db}</td>
+          <td class="p-3"><span class="px-2 py-0.5 rounded bg-amber-500 text-slate-950 font-mono font-bold">${r.de}</span></td>
+          <td class="p-3 font-mono text-slate-300">Đầu ${r.dau} • Đuôi ${r.duoi} • Tổng ${r.tong}</td>
+          <td class="p-3 font-mono text-slate-300">${r.g1}</td>
+          <td class="p-3 font-mono text-slate-400">${r.g7.join(', ')}</td>
+          <td class="p-3">${fullSet.has(r.date) ? '<span class="px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 text-[11px] font-semibold whitespace-nowrap">đủ 27 giải</span>' : '<span class="px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 text-[11px] whitespace-nowrap">ĐB/G1/G7</span>'}</td>
+        </tr>
+      `).join('');
+    }
+
+
+    // ---- dữ liệu 27 giải gốc (23–30/10/2026) ----
+    const EIGHT_DAYS_FULL_DRAWS = [
+      {
+        date: "23/10/2026", dow: "Thứ 6",
+        DB: ["97067"], G1: ["19688"], G2: ["87440", "68563"],
+        G3: ["98237", "96450", "34516", "92414", "41011", "49196"],
+        G4: ["0840", "7322", "9978", "7001"],
+        G5: ["0664", "1595", "8514", "6342", "2372", "0724"],
+        G6: ["953", "200", "521"], G7: ["70", "16", "53", "03"]
+      },
+      {
+        date: "24/10/2026", dow: "Thứ 7",
+        DB: ["45932"], G1: ["53030"], G2: ["29591", "01585"],
+        G3: ["96176", "68160", "51305", "20811", "37414", "11788"],
+        G4: ["3919", "0584", "3856", "9425"],
+        G5: ["8659", "3200", "5103", "6066", "5168", "1094"],
+        G6: ["335", "891", "879"], G7: ["86", "57", "27", "49"]
+      },
+      {
+        date: "25/10/2026", dow: "Chủ nhật",
+        DB: ["30328"], G1: ["16643"], G2: ["06745", "79482"],
+        G3: ["00981", "90959", "09681", "71865", "84063", "92739"],
+        G4: ["3022", "4825", "7901", "2729"],
+        G5: ["3353", "3776", "2498", "3324", "9116", "0964"],
+        G6: ["221", "602", "786"], G7: ["52", "94", "82", "67"]
+      },
+      {
+        date: "26/10/2026", dow: "Thứ 2",
+        DB: ["13221"], G1: ["82697"], G2: ["34264", "74828"],
+        G3: ["56825", "14797", "58426", "50810", "01089", "62776"],
+        G4: ["5523", "2444", "1938", "6713"],
+        G5: ["0335", "8731", "9947", "2747", "9934", "9250"],
+        G6: ["004", "343", "794"], G7: ["92", "66", "69", "82"]
+      },
+      {
+        date: "27/10/2026", dow: "Thứ 3",
+        DB: ["44691"], G1: ["89116"], G2: ["78273", "85201"],
+        G3: ["76185", "73369", "17234", "68024", "73576", "07572"],
+        G4: ["8193", "6579", "6928", "7419"],
+        G5: ["2932", "2166", "3893", "5969", "4596", "5434"],
+        G6: ["647", "386", "507"], G7: ["19", "41", "91", "06"]
+      },
+      {
+        date: "28/10/2026", dow: "Thứ 4",
+        DB: ["74175"], G1: ["18190"], G2: ["62731", "30468"],
+        G3: ["95839", "63573", "61608", "11741", "53427", "95088"],
+        G4: ["4748", "4683", "0750", "5861"],
+        G5: ["5728", "8517", "1385", "6152", "3575", "1561"],
+        G6: ["001", "997", "249"], G7: ["58", "30", "05", "41"]
+      },
+      {
+        date: "29/10/2026", dow: "Thứ 5",
+        DB: ["53401"], G1: ["47745"], G2: ["62988", "46737"],
+        G3: ["48305", "12492", "78217", "29106", "90525", "25381"],
+        G4: ["4352", "7734", "0900", "2827"],
+        G5: ["1885", "3123", "3284", "2452", "7149", "6951"],
+        G6: ["759", "626", "969"], G7: ["96", "49", "18", "55"]
+      },
+      {
+        date: "30/10/2026", dow: "Thứ 6",
+        DB: ["69259"], G1: ["87081"], G2: ["71863", "38253"],
+        G3: ["08452", "03706", "11542", "49304", "76503", "19314"],
+        G4: ["3423", "3537", "1570", "9612"],
+        G5: ["8560", "8247", "2833", "8165", "5171", "6275"],
+        G6: ["857", "236", "824"], G7: ["94", "77", "48", "25"]
+      }
+    ];
+
+    // ======================================================================
+    // v2: DỮ LIỆU ĐỦ 27 GIẢI + TỰ DÒ CẦU (cầu vị trí, cầu cộng tổng) THEO KỲ MỚI NHẤT
+    // ======================================================================
+    const PRIZE_SHAPE = [['DB', 1, 5], ['G1', 1, 5], ['G2', 2, 5], ['G3', 6, 5], ['G4', 4, 4], ['G5', 6, 4], ['G6', 3, 3], ['G7', 4, 2]];
+    const DOW_VI = ['Chủ nhật', 'Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7'];
+
+    function prizeNameVi(pz, cnt, i) {
+      if (pz === 'DB') return 'Giải ĐB';
+      if (pz === 'G1') return 'Giải Nhất';
+      return 'Giải ' + pz.slice(1) + (cnt > 1 ? '.' + (i + 1) : '');
+    }
+    const POS_META = (() => {
+      const arr = [];
+      PRIZE_SHAPE.forEach(([pz, cnt, len]) => {
+        for (let i = 0; i < cnt; i++) {
+          for (let c = 0; c < len; c++) {
+            arr.push({
+              prize: pz, idx: i, c,
+              lbl: cnt > 1 ? `${pz}.${i + 1}[${c + 1}]` : `${pz}[${c + 1}]`,
+              id: `${pz}-${i}-${c}`,
+              name: `Chữ số thứ ${c + 1} ${prizeNameVi(pz, cnt, i)}`
+            });
+          }
+        }
+      });
+      return arr;
+    })();
+    const NPOS = POS_META.length; // 107
+
+    function parseDMY(s) {
+      const m = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(String(s).trim());
+      if (!m) return null;
+      return new Date(Date.UTC(+m[3], +m[2] - 1, +m[1]));
+    }
+    function dmyKey(s) {
+      const d = parseDMY(s);
+      return d ? d.getTime() / 86400000 : -1;
+    }
+    function fmtDMY(d) {
+      const p = n => String(n).padStart(2, '0');
+      return p(d.getUTCDate()) + '/' + p(d.getUTCMonth() + 1) + '/' + d.getUTCFullYear();
+    }
+    function addDaysDMY(s, n) {
+      const d = parseDMY(s);
+      return fmtDMY(new Date(d.getTime() + n * 86400000));
+    }
+    function dowOfDMY(s) {
+      return DOW_VI[parseDMY(s).getUTCDay()];
+    }
+    function shortDM(s) { return String(s).slice(0, 5); }
+
+    // Kiểm tra 1 kỳ đủ 27 giải đúng độ dài
+    function isFullDraw(d) {
+      if (!d) return false;
+      return PRIZE_SHAPE.every(([pz, cnt, len]) =>
+        Array.isArray(d[pz]) && d[pz].length === cnt && d[pz].every(x => new RegExp('^\\d{' + len + '}$').test(String(x))));
+    }
+    function dayVec(d) {
+      const v = new Array(NPOS);
+      let k = 0;
+      PRIZE_SHAPE.forEach(([pz, cnt, len]) => {
+        for (let i = 0; i < cnt; i++) for (let c = 0; c < len; c++) v[k++] = Number(d[pz][i][c]);
+      });
+      return v;
+    }
+    function deOf(d) { return d.DB[0].slice(-2); }
+
+    // Chỉ dùng đoạn liên tiếp (mỗi ngày đúng 1 kỳ) tính đến kỳ mới nhất
+    function trailingRun(draws) {
+      let start = draws.length - 1;
+      while (start > 0 && dmyKey(draws[start].date) - dmyKey(draws[start - 1].date) === 1) start--;
+      return draws.slice(Math.max(start, 0));
+    }
+
+    // Bộ số theo bóng dương: bộ (x,y) với x,y = chữ số mod 5
+    function boOf(a, b) {
+      const x = Math.min(a % 5, b % 5), y = Math.max(a % 5, b % 5);
+      const ordered = ['' + x + y, '' + y + x, '' + x + (y + 5), '' + (y + 5) + x, '' + (x + 5) + y, '' + y + (x + 5), '' + (x + 5) + (y + 5), '' + (y + 5) + (x + 5)];
+      return { name: 'Bộ ' + x + y, list: [...new Set(ordered)] };
+    }
+
+    // ---------------- Cầu vị trí: cặp (A,B) ghép lại = 2 số cuối ĐB hôm sau
+    function findPosBridges(drawsAll, minStreak, maxN) {
+      const draws = trailingRun(drawsAll);
+      const n = draws.length;
+      const out = [];
+      if (n < minStreak + 1) return { draws, list: out, count: 0 };
+      const vec = draws.map(dayVec);
+      const de = draws.map(d => Number(deOf(d)));
+      for (let A = 0; A < NPOS - 1; A++) {
+        for (let B = A + 1; B < NPOS; B++) {
+          const hit = k => { const x = vec[k][A], y = vec[k][B], d = de[k + 1]; return x * 10 + y === d || y * 10 + x === d; };
+          let s = 0;
+          for (let k = n - 2; k >= 0; k--) { if (hit(k)) s++; else break; }
+          if (s < minStreak) continue;
+          let total = 0;
+          for (let k = 0; k < n - 1; k++) if (hit(k)) total++;
+          out.push({ A, B, s, total, a: vec[n - 1][A], b: vec[n - 1][B] });
+        }
+      }
+      out.sort((p, q) => q.s - p.s || q.total - p.total || p.A - q.A || p.B - q.B);
+      return { draws, list: maxN ? out.slice(0, maxN) : out, count: out.length };
+    }
+
+    // ---------------- Cầu cộng tổng nhiều vị trí, nhiều ngày
+    // lags: [1,2,3] hoặc [1,3]; K = số kỳ phải "ăn thông" liên tiếp tính đến kỳ mới nhất
+    function findSumFormulas(drawsAll, lags, K) {
+      const draws = trailingRun(drawsAll);
+      const n = draws.length;
+      const maxLag = Math.max(...lags);
+      const res = { dau: [], duoi: [], tong: [], K: 0, n };
+      if (K < 1 || n - maxLag < K) return res;
+      res.K = K;
+      const vec = draws.map(dayVec);
+      const ts = []; for (let t = n - K; t < n; t++) ts.push(t);
+      const y = { dau: [], duoi: [], tong: [] };
+      ts.forEach(t => {
+        const de = deOf(draws[t]);
+        const dd = Number(de[0]), uu = Number(de[1]);
+        y.dau.push(dd); y.duoi.push(uu); y.tong.push((dd + uu) % 10);
+      });
+      const col = lag => Array.from({ length: NPOS }, (_, p) => ts.map(t => vec[t - lag][p]));
+      const C = lags.map(col);
+      const predOf = ps => ps.reduce((acc, p, i) => acc + vec[n - lags[i]][p], 0) % 10;
+      ['dau', 'duoi', 'tong'].forEach(tg => {
+        const yy = y[tg];
+        if (lags.length === 3) {
+          const map3 = new Map();
+          for (let p = 0; p < NPOS; p++) {
+            const key = C[2][p].join('');
+            if (!map3.has(key)) map3.set(key, []);
+            map3.get(key).push(p);
+          }
+          for (let p1 = 0; p1 < NPOS; p1++) {
+            for (let p2 = 0; p2 < NPOS; p2++) {
+              let key = '';
+              for (let j = 0; j < K; j++) key += ((yy[j] - C[0][p1][j] - C[1][p2][j]) % 10 + 20) % 10;
+              const hit = map3.get(key);
+              if (hit) hit.forEach(p3 => res[tg].push({ ps: [p1, p2, p3], pred: predOf([p1, p2, p3]) }));
+            }
+          }
+        } else {
+          const same = lags[0] === lags[1];
+          for (let p1 = 0; p1 < NPOS; p1++) {
+            for (let p2 = same ? p1 : 0; p2 < NPOS; p2++) {
+              let ok = true;
+              for (let j = 0; j < K; j++) if ((C[0][p1][j] + C[1][p2][j]) % 10 !== yy[j]) { ok = false; break; }
+              if (ok) res[tg].push({ ps: [p1, p2], pred: predOf([p1, p2]) });
+            }
+          }
+        }
+      });
+      return res;
+    }
+
+    const termsOf = (f, lags) => f.ps.map((p, i) => ({ lag: lags[i], pos: POS_META[p].lbl }));
+
+    // Tạo "tổ hợp siêu cầu" (Đầu, Đuôi, Tổng hội tụ) từ các công thức dò được
+    function buildMultiSum(drawsAll) {
+      const draws = trailingRun(drawsAll);
+      const n = draws.length;
+      const out = { combos: [], kpi: null, n };
+      const K3 = Math.min(5, n - 3), K2 = Math.min(4, n - 3);
+      if (K2 < 2) return out;
+      const F3 = K3 >= 2 ? findSumFormulas(draws, [1, 2, 3], K3) : { dau: [], duoi: [], tong: [], K: 0 };
+      const F11 = n - 1 >= 5 ? findSumFormulas(draws, [1, 1], 5) : { dau: [], duoi: [], tong: [], K: 0 };
+      const F2 = findSumFormulas(draws, [1, 3], K2);
+      const pool = tg => [
+        ...F3[tg].map(f => ({ ...f, lags: [1, 2, 3], K: F3.K })),
+        ...F11[tg].map(f => ({ ...f, lags: [1, 1], K: F11.K })),
+        ...F2[tg].map(f => ({ ...f, lags: [1, 3], K: F2.K }))
+      ];
+      const P = { dau: pool('dau'), duoi: pool('duoi'), tong: pool('tong') };
+      const votes = tg => { const v = Array(10).fill(0); P[tg].forEach(f => v[f.pred]++); return v; };
+      const V = { dau: votes('dau'), duoi: votes('duoi'), tong: votes('tong') };
+      out.kpi = {
+        K3: F3.K, K2: F2.K,
+        cnt: {
+          dau: [F3.dau.length + F11.dau.length, F2.dau.length],
+          duoi: [F3.duoi.length + F11.duoi.length, F2.duoi.length],
+          tong: [F3.tong.length + F11.tong.length, F2.tong.length]
+        },
+        top: tg => V[tg].map((c, d) => ({ d, c })).filter(x => x.c > 0).sort((p, q) => q.c - p.c || p.d - q.d).slice(0, 3)
+      };
+      out.kpi.topDau = out.kpi.top('dau'); out.kpi.topDuoi = out.kpi.top('duoi'); out.kpi.topTong = out.kpi.top('tong');
+
+      const first = (tg, val) => {
+        const l = P[tg].filter(f => f.pred === val);
+        l.sort((p, q) => q.K - p.K || q.lags.length - p.lags.length);
+        return l[0];
+      };
+      const cand = [];
+      for (let a = 0; a < 10; a++) {
+        if (!V.dau[a]) continue;
+        for (let b = 0; b < 10; b++) {
+          if (!V.duoi[b]) continue;
+          const t = (a + b) % 10;
+          if (!V.tong[t]) continue;
+          cand.push({ a, b, t, score: V.dau[a] * V.duoi[b] * V.tong[t] });
+        }
+      }
+      cand.sort((p, q) => q.score - p.score || (p.a * 10 + p.b) - (q.a * 10 + q.b));
+      cand.slice(0, 5).forEach((c, i) => {
+        const fd = first('dau', c.a), fu = first('duoi', c.b), ft = first('tong', c.t);
+        const Kmin = Math.min(fd.K, fu.K, ft.K);
+        const bo = boOf(c.a, c.b);
+        out.combos.push({
+          name: `Tổ hợp #${i + 1} (Ăn thông ${Kmin} ngày ${shortDM(draws[n - Kmin].date)} → ${shortDM(draws[n - 1].date)} • Hội tụ Tổng ${c.t})`,
+          btd: `${c.a}${c.b}`, std: c.a === c.b ? `${c.a}${c.b}` : `${c.a}${c.b} - ${c.b}${c.a}`,
+          bo: `${bo.name} (${bo.list.join(', ')})`,
+          startIndex: n - Kmin,
+          dauTerms: termsOf(fd, fd.lags), duoiTerms: termsOf(fu, fu.lags), tongTerms: termsOf(ft, ft.lags),
+          a: c.a, b: c.b, t: c.t, votes: [V.dau[c.a], V.duoi[c.b], V.tong[c.t]]
+        });
+      });
+      return out;
+    }
+
+    // ---------------- Phôi ĐB: lấy 1 chữ số ĐB của ngày cách L1 ngày + 1 chữ số ĐB của ngày cách L2 ngày
+    // ghép lại (đảo thứ tự cũng được) = 2 số cuối ĐB của ngày đang xét. recsAll: mảng kỳ tăng dần, mỗi kỳ có date và DB[0]
+    function findDbBridges(recsAll, maxLag, minStreak, maxN) {
+      const run = trailingRun(recsAll);
+      const n = run.length;
+      const out = [];
+      if (n < minStreak + 2) return { run, list: out, count: 0 };
+      const db = run.map(r => r.DB[0].split('').map(Number));
+      const de = run.map(r => Number(r.DB[0].slice(-2)));
+      const cells = [];
+      for (let L = 1; L <= Math.min(maxLag, n); L++) for (let i = 0; i < 5; i++) cells.push({ L, i });
+      for (let u = 0; u < cells.length; u++) {
+        for (let v = u + 1; v < cells.length; v++) {
+          const c1 = cells[u], c2 = cells[v];
+          const hit = t => {
+            if (t - c1.L < 0 || t - c2.L < 0) return false;
+            const x = db[t - c1.L][c1.i], y = db[t - c2.L][c2.i];
+            return x * 10 + y === de[t] || y * 10 + x === de[t];
+          };
+          let s = 0;
+          for (let t = n - 1; t >= 0; t--) { if (hit(t)) s++; else break; }
+          if (s < minStreak) continue;
+          let total = 0, trials = 0;
+          for (let t = Math.max(c1.L, c2.L); t < n; t++) { trials++; if (hit(t)) total++; }
+          out.push({ L1: c1.L, i1: c1.i, L2: c2.L, i2: c2.i, s, total, trials, a: db[n - c1.L][c1.i], b: db[n - c2.L][c2.i] });
+        }
+      }
+      out.sort((p, q) => q.s - p.s || q.trials - p.trials || q.total - p.total || (p.L1 + p.L2) - (q.L1 + q.L2) || p.L1 - q.L1 || p.i1 - q.i1 || p.i2 - q.i2);
+      return { run, list: maxN ? out.slice(0, maxN) : out, count: out.length };
+    }
+
+
+    // ======================================================================
+    // v2: KHO DỮ LIỆU (lưu trong trình duyệt) + BÓC TÁCH VĂN BẢN soketqua.vn + NHẬP TAY
+    // ======================================================================
+    const STORE_KEY = 'xsmb_soketqua_tool_v2';
+    const PRIZE_ORDER = PRIZE_SHAPE.map(x => x[0]);
+    const SHAPE_MAP = {};
+    PRIZE_SHAPE.forEach(([pz, cnt, len]) => { SHAPE_MAP[pz] = { cnt, len }; });
+    const $ = id => document.getElementById(id);
+
+    let userDays = {};      // các kỳ do người dùng nhập/dán (lưu localStorage)
+    let ALL_DAYS = [];      // tất cả các kỳ, cũ → mới
+    let fullDraws = [];     // chỉ các kỳ có đủ 27 giải, cũ → mới
+    let BR = null;          // kết quả dò cầu (tính lại sau mỗi lần dữ liệu đổi)
+    let currentTab = 'multisum';
+
+    function esc(s) {
+      return String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+    }
+
+    function cloneRec(d) {
+      const r = { date: d.date };
+      PRIZE_ORDER.forEach(p => { if (d[p]) r[p] = d[p].slice(); });
+      return r;
+    }
+
+    // Kỳ hợp lệ tối thiểu: ĐB + G1 + G7 đúng định dạng
+    function validRec(r) {
+      if (!r || !parseDMY(r.date)) return false;
+      const ok = pz => Array.isArray(r[pz]) && r[pz].length === SHAPE_MAP[pz].cnt &&
+        r[pz].every(x => new RegExp('^\\d{' + SHAPE_MAP[pz].len + '}$').test(String(x)));
+      return ok('DB') && ok('G1') && ok('G7');
+    }
+
+    // Dữ liệu gốc: 30 kỳ (ĐB, G1, G7) + 8 kỳ đủ 27 giải
+    function makeBase() {
+      const m = new Map();
+      INITIAL_DATA.forEach(r => m.set(r.date, { date: r.date, DB: [r.db], G1: [r.g1], G7: r.g7.slice() }));
+      EIGHT_DAYS_FULL_DRAWS.forEach(d => {
+        const old = m.get(d.date);
+        if (!old || old.DB[0] === d.DB[0]) m.set(d.date, cloneRec(d));
+      });
+      return m;
+    }
+
+    // Ghép kỳ mới vào kỳ cũ cùng ngày: không để bản thiếu giải đè mất bản đủ 27 giải khi ĐB, G1, G7 trùng nhau
+    function mergeRec(old, nw) {
+      if (!old) return nw;
+      if (isFullDraw(nw)) return nw;
+      if (isFullDraw(old) && old.DB[0] === nw.DB[0] && old.G1[0] === nw.G1[0] &&
+        old.G7.join(',') === nw.G7.join(',')) return old;
+      return nw;
+    }
+
+    function toHistoryRow(rec) {
+      const db = rec.DB[0], de = db.slice(-2);
+      return {
+        date: rec.date, dow: dowOfDMY(rec.date), db, g1: rec.G1[0], g7: rec.G7.slice(),
+        loto_count: 27, de, dau: Number(de[0]), duoi: Number(de[1]),
+        tong: (Number(de[0]) + Number(de[1])) % 10
+      };
+    }
+
+    function rebuildData() {
+      const m = makeBase();
+      Object.keys(userDays).forEach(k => {
+        const r = userDays[k];
+        if (validRec(r)) m.set(r.date, mergeRec(m.get(r.date), r));
+      });
+      ALL_DAYS = [...m.values()].sort((a, b) => dmyKey(a.date) - dmyKey(b.date));
+      fullDraws = ALL_DAYS.filter(isFullDraw);
+      historyData = ALL_DAYS.slice().reverse().map(toHistoryRow);
+    }
+
+    function loadUserDays() {
+      try {
+        const s = localStorage.getItem(STORE_KEY);
+        if (!s) return {};
+        const o = JSON.parse(s);
+        const out = {};
+        Object.keys((o && o.days) || {}).forEach(k => { if (validRec(o.days[k])) out[k] = o.days[k]; });
+        return out;
+      } catch (e) { return {}; }
+    }
+    function saveUserDays() {
+      try { localStorage.setItem(STORE_KEY, JSON.stringify({ v: 2, days: userDays })); return true; }
+      catch (e) { return false; }
+    }
+
+    function lastDateStr() { return ALL_DAYS.length ? ALL_DAYS[ALL_DAYS.length - 1].date : null; }
+    function nextDateStr() { const l = lastDateStr(); return l ? addDaysDMY(l, 1) : ''; }
+
+    function normDate(s, refDate) {
+      s = String(s || '').trim();
+      const m = /^(\d{1,2})[\/\-.](\d{1,2})(?:[\/\-.](\d{2,4}))?$/.exec(s);
+      if (!m) return null;
+      let y = m[3] ? Number(m[3]) : (refDate && parseDMY(refDate) ? parseDMY(refDate).getUTCFullYear() : new Date().getFullYear());
+      if (y < 100) y += 2000;
+      const dt = new Date(Date.UTC(y, Number(m[2]) - 1, Number(m[1])));
+      if (dt.getUTCMonth() !== Number(m[2]) - 1 || dt.getUTCDate() !== Number(m[1])) return null;
+      return fmtDMY(dt);
+    }
+
+    // ---------------------------------------------------------------- bóc tách văn bản
+    const ORD_WORDS = { 'nhất': 'G1', 'nhat': 'G1', 'nhì': 'G2', 'nhi': 'G2', 'ba': 'G3', 'tư': 'G4', 'tu': 'G4', 'năm': 'G5', 'nam': 'G5', 'sáu': 'G6', 'sau': 'G6', 'bảy': 'G7', 'bay': 'G7' };
+
+    function readLabel(toks, i) {
+      const n = k => (toks[i + k] || '').toLowerCase().normalize('NFC').replace(/[.()\[\]]/g, '');
+      const a = n(0), b = n(1), c = n(2);
+      if (a === 'đb' || a === 'gđb' || a === 'db' || a === 'gdb') return { pz: 'DB', skip: 1 };
+      if (a === 'đặc' && b === 'biệt') return { pz: 'DB', skip: 2 };
+      if (/^g[1-7]$/.test(a)) return { pz: 'G' + a[1], skip: 1 };
+      if (a === 'giải' || a === 'giai' || a === 'g') {
+        if (b === 'đb' || b === 'db') return { pz: 'DB', skip: 2 };
+        if (b === 'đặc' && c === 'biệt') return { pz: 'DB', skip: 3 };
+        if (/^[1-7]$/.test(b)) return { pz: 'G' + b, skip: 2 };
+        if (ORD_WORDS[b]) return { pz: ORD_WORDS[b], skip: 2 };
+      }
+      if (a === 'nhất' || a === 'nhat') return { pz: 'G1', skip: 1 };
+      if (a === 'nhì' || a === 'nhi') return { pz: 'G2', skip: 1 };
+      return null;
+    }
+
+    // Đọc 1 khối văn bản của 1 ngày: trả về các giải tìm thấy + dãy số dự phòng
+    function parsePrizeText(text) {
+      const toks = String(text).replace(/[ ​]/g, ' ').split(/[\s,;|:\-–—]+/).filter(Boolean);
+      const got = {};
+      PRIZE_ORDER.forEach(p => { got[p] = []; });
+      const nums = [];
+      let cur = null;
+      for (let i = 0; i < toks.length; i++) {
+        const lab = readLabel(toks, i);
+        if (lab) { cur = lab.pz; i += lab.skip - 1; continue; }
+        const t = toks[i];
+        if (/^\d+$/.test(t)) {
+          if (t.length >= 2 && t.length <= 5) nums.push(t);
+          if (cur) {
+            const { cnt, len } = SHAPE_MAP[cur];
+            if (t.length === len && got[cur].length < cnt) got[cur].push(t);
+          }
+        }
+      }
+      return { got, nums };
+    }
+
+    function interpretBlock(text) {
+      const { got, nums } = parsePrizeText(text);
+      if (nums.length === 0) return { kind: 'empty' };
+      const full = {};
+      PRIZE_ORDER.forEach(p => { full[p] = got[p].slice(); });
+      if (isFullDraw(full)) return { kind: 'full', rec: full };
+
+      // Dự phòng: dán toàn số, không có nhãn → 27 số theo đúng thứ tự giải
+      const lens = [];
+      PRIZE_SHAPE.forEach(([pz, cnt, len]) => { for (let i = 0; i < cnt; i++) lens.push(len); });
+      for (let s = 0; s + lens.length <= nums.length; s++) {
+        if (lens.every((L, k) => nums[s + k].length === L)) {
+          const rec = {};
+          let k = s;
+          PRIZE_SHAPE.forEach(([pz, cnt]) => { rec[pz] = nums.slice(k, k + cnt); k += cnt; });
+          return { kind: 'full', rec };
+        }
+      }
+      if (got.DB.length === 1 && got.G1.length === 1 && got.G7.length === 4) {
+        return { kind: 'partial', rec: { DB: got.DB, G1: got.G1, G7: got.G7 } };
+      }
+      const miss = [];
+      if (got.DB.length !== 1) miss.push('Giải ĐB (5 số)');
+      if (got.G1.length !== 1) miss.push('Giải Nhất (5 số)');
+      if (got.G7.length !== 4) miss.push('Giải 7 (4 số, mỗi số 2 chữ số)');
+      return { kind: 'bad', miss };
+    }
+
+    // Tách văn bản theo ngày dd/mm/yyyy; cho phép dán nhiều ngày, thứ tự bất kỳ
+    function parseBulk(text, fallbackDate) {
+      const re = /(\d{1,2})[\/\-.](\d{1,2})[\/\-.](20\d{2})/g;
+      const marks = [];
+      let m;
+      while ((m = re.exec(text))) {
+        const d = Number(m[1]), mo = Number(m[2]), y = Number(m[3]);
+        if (mo < 1 || mo > 12 || d < 1 || d > 31) continue;
+        const dt = new Date(Date.UTC(y, mo - 1, d));
+        if (dt.getUTCMonth() !== mo - 1) continue;
+        marks.push({ date: fmtDMY(dt), start: m.index, end: m.index + m[0].length });
+      }
+      const blocks = new Map();
+      let assumed = false;
+      if (!marks.length) {
+        blocks.set(fallbackDate, text);
+        assumed = true;
+      } else {
+        marks.forEach((mk, i) => {
+          const body = text.slice(mk.end, i + 1 < marks.length ? marks[i + 1].start : text.length);
+          blocks.set(mk.date, (blocks.get(mk.date) || '') + ' ' + body);
+        });
+      }
+      const items = [];
+      blocks.forEach((body, date) => {
+        const r = interpretBlock(body);
+        if (r.kind === 'empty') return;
+        items.push(Object.assign({ date }, r));
+      });
+      items.sort((a, b) => dmyKey(a.date) - dmyKey(b.date));
+      return { items, assumedDate: assumed ? fallbackDate : null };
+    }
+
+    // ---------------------------------------------------------------- ghi dữ liệu
+    function addRecords(recs) {
+      recs.forEach(r => {
+        const rec = cloneRec(r);
+        const cur = ALL_DAYS.find(x => x.date === rec.date);
+        userDays[rec.date] = mergeRec(cur, rec);
+      });
+      const saved = saveUserDays();
+      rebuildData();
+      refreshAll();
+      return saved;
+    }
+
+    function reportHtml(items, extra, saved) {
+      const rows = items.map(it => {
+        const dow = dowOfDMY(it.date);
+        if (it.kind === 'full') return `<div class="text-emerald-300">✓ ${esc(dow)}, ${it.date}: đủ 27 giải — ĐB <span class="font-mono font-bold">${it.rec.DB[0]}</span></div>`;
+        if (it.kind === 'partial') return `<div class="text-amber-300">◐ ${esc(dow)}, ${it.date}: mới có ĐB / G1 / G7 (ĐB <span class="font-mono font-bold">${it.rec.DB[0]}</span>) — tab Dự đoán, Thống kê, Phôi ĐB cập nhật; cầu vị trí và cộng tổng cần đủ 27 giải</div>`;
+        return `<div class="text-rose-300">✗ ${esc(dow)}, ${it.date}: thiếu ${esc(it.miss.join(', '))}</div>`;
+      }).join('');
+      const ok = items.some(i => i.kind === 'full' || i.kind === 'partial');
+      const nav = ok ? `<div class="flex flex-wrap gap-2 pt-1.5">
+          <button data-goto="multisum" class="goto-btn px-2.5 py-1 rounded-lg bg-emerald-600/80 hover:bg-emerald-500 text-white text-[11px] font-semibold">Xem Siêu Cầu Cộng Tổng</button>
+          <button data-goto="visual" class="goto-btn px-2.5 py-1 rounded-lg bg-amber-500/80 hover:bg-amber-400 text-slate-950 text-[11px] font-semibold">Xem Cầu Vị Trí & Phôi</button>
+          <button data-goto="tail34" class="goto-btn px-2.5 py-1 rounded-lg bg-fuchsia-500/80 hover:bg-fuchsia-400 text-slate-950 text-[11px] font-semibold">Xem Cầu 3 & 4 Số Đuôi</button>
+          <button data-goto="predict" class="goto-btn px-2.5 py-1 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-100 text-[11px] font-semibold">Xem Dự Đoán</button>
+        </div>` : '';
+      const warn = saved === false ? '<div class="text-amber-300">Trình duyệt không cho lưu dữ liệu (chế độ ẩn danh?) — dữ liệu chỉ giữ đến khi đóng trang.</div>' : '';
+      return `<div class="p-3 rounded-xl bg-slate-950 border border-slate-800 text-xs space-y-1">${extra || ''}${rows}${warn}${nav}</div>`;
+    }
+
+    function showReport(html) {
+      const box = $('parseReport');
+      box.innerHTML = html;
+      box.querySelectorAll('.goto-btn').forEach(b => b.addEventListener('click', () => switchTab(b.getAttribute('data-goto'))));
+    }
+
+    function bridgeCountText() {
+      return `${BR.posWeak ? 'chỉ có cầu vị trí yếu (ăn 1 kỳ)' : (BR.pos.count || 0) + ' cầu vị trí'}, ${BR.ms.combos.length} tổ hợp cộng tổng, ${BR.phoi.list.length} phôi ĐB${BR.phoiWeak ? ' (yếu, ăn 1 kỳ)' : ''}`;
+    }
+
+    function handleParse() {
+      const raw = $('rawSoketquaInput').value.trim();
+      if (!raw) { showToast('Vui lòng dán nội dung từ soketqua.vn vào ô trống.'); return; }
+      const manualDate = normDate($('inputManualDate').value, lastDateStr());
+      const fallback = manualDate || nextDateStr();
+      const { items, assumedDate } = parseBulk(raw, fallback);
+      if (!items.length) {
+        showReport(reportHtml([], '<div class="text-rose-300">Không nhận ra kết quả nào. Cần có ngày (dd/mm/yyyy) và các giải ĐB, G1 … G7 trong đoạn văn bản.</div>'));
+        showToast('Không tìm thấy kết quả xổ số trong đoạn văn bản.');
+        return;
+      }
+      const good = items.filter(i => i.kind === 'full' || i.kind === 'partial');
+      let saved = true;
+      if (good.length) saved = addRecords(good.map(i => Object.assign({ date: i.date }, i.rec)));
+      const note = assumedDate ? `<div class="text-slate-300">Đoạn dán không có ngày, đã gán cho ${assumedDate}.</div>` : '';
+      showReport(reportHtml(items, note, saved));
+      if (good.length) {
+        showToast(`Đã cập nhật ${good.length} kỳ • ${bridgeCountText()}`);
+        $('rawSoketquaInput').value = '';
+      } else {
+        showToast('Có số liệu nhưng chưa đủ ĐB, G1, G7 để lưu — xem báo cáo bên dưới.');
+      }
+    }
+
+    function numsOf(id) { return $(id).value.trim().split(/\D+/).filter(Boolean); }
+
+    function handleManual() {
+      const date = normDate($('inputManualDate').value, lastDateStr());
+      if (!date) { showToast('Ngày không hợp lệ. Nhập theo dạng dd/mm/yyyy, ví dụ 31/10/2026.'); return; }
+      const rec = { date, DB: [numsOf('inputManualDB').join('')], G1: [numsOf('inputManualG1').join('')], G7: numsOf('inputManualG7') };
+      if (!validRec(rec)) {
+        const bad = [];
+        if (!/^\d{5}$/.test(rec.DB[0])) bad.push('Giải ĐB cần đúng 5 chữ số');
+        if (!/^\d{5}$/.test(rec.G1[0])) bad.push('Giải Nhất cần đúng 5 chữ số');
+        if (rec.G7.length !== 4 || !rec.G7.every(x => x.length === 2)) bad.push('Giải 7 cần 4 số, mỗi số 2 chữ số');
+        showToast(bad.join(' • '));
+        return;
+      }
+      const extraIds = { G2: 'inputManualG2', G3: 'inputManualG3', G4: 'inputManualG4', G5: 'inputManualG5', G6: 'inputManualG6' };
+      const any = Object.values(extraIds).some(id => $(id).value.trim() !== '');
+      if (any) {
+        for (const pz of Object.keys(extraIds)) {
+          const arr = numsOf(extraIds[pz]);
+          const { cnt, len } = SHAPE_MAP[pz];
+          if (arr.length !== cnt || !arr.every(x => x.length === len)) {
+            showToast(`Giải ${pz.slice(1)} cần ${cnt} số, mỗi số ${len} chữ số (đang có ${arr.length} số).`);
+            return;
+          }
+          rec[pz] = arr;
+        }
+      }
+      const saved = addRecords([rec]);
+      const kind = isFullDraw(rec) ? 'full' : 'partial';
+      showReport(reportHtml([{ date, kind, rec }], '', saved));
+      showToast(`Đã thêm kỳ ${date} (${kind === 'full' ? 'đủ 27 giải' : 'ĐB/G1/G7'}) • ${bridgeCountText()}`);
+      ['inputManualDB', 'inputManualG1', 'inputManualG2', 'inputManualG3', 'inputManualG4', 'inputManualG5', 'inputManualG6', 'inputManualG7']
+        .forEach(id => { $(id).value = ''; });
+      syncManualDate(true);
+    }
+
+    function syncManualDate(forceNext) {
+      const inp = $('inputManualDate');
+      if (forceNext || !inp.value.trim()) inp.value = nextDateStr();
+      const d = normDate(inp.value, lastDateStr());
+      $('inputManualDow').value = d ? dowOfDMY(d) : '';
+    }
+
+    function handleUndo() {
+      const keys = Object.keys(userDays).sort((a, b) => dmyKey(b) - dmyKey(a));
+      if (!keys.length) { showToast('Chưa có kỳ nào do bạn nhập để hoàn tác.'); return; }
+      const k = keys[0];
+      delete userDays[k];
+      saveUserDays();
+      rebuildData();
+      refreshAll();
+      syncManualDate(true);
+      showToast('Đã bỏ kỳ ' + k + ' do bạn nhập.');
+    }
+
+    function handleReset() {
+      userDays = {};
+      try { localStorage.removeItem(STORE_KEY); } catch (e) { /* bỏ qua */ }
+      rebuildData();
+      refreshAll();
+      syncManualDate(true);
+      showReport('');
+      showToast('Đã xóa các kỳ bạn nhập, quay về dữ liệu gốc đến ' + lastDateStr() + '.');
+    }
+
+
+    // ======================================================================
+    // v2: TÍNH LẠI & VẼ LẠI TẤT CẢ CÁC TAB CẦU THEO DỮ LIỆU HIỆN CÓ
+    // ======================================================================
+    function pairStd(a, b) { return a === b ? `${a}${b}` : `${a}${b} - ${b}${a}`; }
+
+    function getCenterRel(el, wrapperRect) {
+      if (!el) return null;
+      const r = el.getBoundingClientRect();
+      return { x: r.left - wrapperRect.left + r.width / 2, y: r.top - wrapperRect.top + r.height / 2 };
+    }
+
+    function buildFlat(run) {
+      const matrix = run.map(d => {
+        const v = dayVec(d);
+        const map = {};
+        POS_META.forEach((p, k) => { map[p.lbl] = v[k]; });
+        return { date: d.date, dow: dowOfDMY(d.date), db: d.DB[0], de: d.DB[0].slice(-2), map };
+      });
+      return { matrix };
+    }
+
+    // ---- ảnh mẫu 2 (tĩnh, giữ nguyên từ bản gốc)
+    const IMAGE2_SAMPLE_MATRIX = [
+      ["20104", "52751", "94738", "36917", "78196", "45932"],
+      ["97281", "01816", "89228", "85080", "34465", "30328"],
+      ["49111", "54804", "42916", "85361", "18132", "13221"],
+      ["61513", "09253", "54796", "82645", "55473", "44691"],
+      ["00250", "12452", "65000", "06168", "77115", "74175"],
+      ["77954", "37642", "39983", "90737", "05651", "53401"],
+      ["17743", "60468", "50834", "83772", "95242", "69259"]
+    ];
+    const SAMPLE_PHOI = {
+      title: "TRÁI CÂY MB", dateLabel: "30/10", headLabel: "ĐẦU 9", boLabel: "BỘ 44", boNumbers: "44,99,49,94",
+      stdLabel: "94, 99", grid: IMAGE2_SAMPLE_MATRIX, rowLabels: ['T7', 'CN', 'T2', 'T3', 'T4', 'T5', 'T6'], colHeaders: null,
+      note: 'Phôi mẫu cố định từ ảnh bạn gửi (kiểm chứng kỳ 30/10) — không đổi theo dữ liệu mới.',
+      paths: [
+        { nodes: [[2, 0, 3, "green"], [1, 1, 3, "green"], [1, 2, 2, "blue"]], target: [2, 5, "green"] },
+        { nodes: [[2, 2, 2, "blue"]], target: [3, 5, "cyan"] },
+        { nodes: [[4, 0, 3, "green"], [3, 1, 3, "green"], [3, 2, 2, "blue"]], target: [4, 5, "green"] },
+        { nodes: [[4, 2, 2, "blue"]], target: [5, 5, "cyan"] },
+        { nodes: [[6, 0, 3, "green"], [5, 1, 3, "green"], [5, 2, 2, "blue"]], target: [6, 5, "green"] }
+      ]
+    };
+
+    // ---- cầu mẫu ảnh 1 (tĩnh): chỉ hiện khi sổ còn đủ 27 giải các ngày 27–29/10
+    function sampleBridge() {
+      const run = BR.run;
+      const idx = run.findIndex(d => d.date === '29/10/2026');
+      if (idx < 2 || run[idx - 2].date !== '27/10/2026') return null;
+      const A = POS_META.findIndex(p => p.id === 'G3-5-2'), B = POS_META.findIndex(p => p.id === 'G6-0-2');
+      return {
+        A, B, s: 2, total: 2, endIdx: idx, sample: true,
+        label: 'Cầu Mẫu Ảnh 1: G3.6[3] + G6.1[3] (27/10→29/10: Ăn 75 → 01) — cố định',
+        boName: 'Chạm 9 (đã nổ ĐB 69259 ngày 30/10)',
+        note: 'Tái hiện ảnh mẫu bạn gửi: ngày 29/10 ghép 3+9 → nổ Chạm 9 (ĐB 69259 ngày 30/10).'
+      };
+    }
+
+    // ---------------- Dò cầu 3 số đuôi (3 càng) & 4 số đuôi (4 càng) của các giải
+    // k = 3 (23 giải từ ĐB -> G6) hoặc k = 4 (20 giải từ ĐB -> G5)
+    // scope: 'db' | 'db_g1' | 'db_g6' | 'all'
+    // orderMode: 'perm' (hoán vị/đảo) | 'exact' (thẳng thứ tự p1 < p2 < ...)
+    function extractDayTails(d, k, scope) {
+      const list = [];
+      PRIZE_SHAPE.forEach(([pz, cnt, len]) => {
+        if (len < k) return;
+        if (scope === 'db' && pz !== 'DB') return;
+        if (scope === 'db_g1' && pz !== 'DB' && pz !== 'G1') return;
+        if (scope === 'db_g6' && pz !== 'DB' && pz !== 'G6' && pz !== 'G1') return;
+        for (let i = 0; i < cnt; i++) {
+          const full = String(d[pz][i]);
+          const tail = full.slice(-k);
+          const lbl = cnt > 1 ? `${pz}.${i + 1}` : pz;
+          list.push({ pz, idx: i, lbl, full, tail, sorted: tail.split('').sort().join('') });
+        }
+      });
+      return list;
+    }
+
+    function uniquePermutations(digitsArr) {
+      const res = new Set();
+      const used = Array(digitsArr.length).fill(false);
+      const cur = [];
+      function backtrack() {
+        if (cur.length === digitsArr.length) {
+          res.add(cur.join(''));
+          return;
+        }
+        for (let i = 0; i < digitsArr.length; i++) {
+          if (used[i]) continue;
+          used[i] = true;
+          cur.push(digitsArr[i]);
+          backtrack();
+          cur.pop();
+          used[i] = false;
+        }
+      }
+      backtrack();
+      return [...res].sort();
+    }
+
+    function chooseCombos(arr, c) {
+      const out = [];
+      function rec(start, picked) {
+        if (picked.length === c) { out.push(picked.slice()); return; }
+        for (let i = start; i <= arr.length - (c - picked.length); i++) {
+          picked.push(arr[i]);
+          rec(i + 1, picked);
+          picked.pop();
+        }
+      }
+      rec(0, []);
+      return out;
+    }
+
+    function findTail34Bridges(drawsAll, k, scope, orderMode, maxN) {
+      const draws = trailingRun(drawsAll);
+      const n = draws.length;
+      if (n < 2) return { draws, list: [], count: 0, maxStreak: 0, weak: false, consensus: [] };
+      const vec = draws.map(dayVec);
+      const dayTails = draws.map(d => extractDayTails(d, k, scope));
+      const exactMaps = dayTails.map(list => {
+        const m = new Map();
+        list.forEach(it => { if (!m.has(it.tail)) m.set(it.tail, []); m.get(it.tail).push(it); });
+        return m;
+      });
+      const sortedMaps = dayTails.map(list => {
+        const m = new Map();
+        list.forEach(it => { if (!m.has(it.sorted)) m.set(it.sorted, []); m.get(it.sorted).push(it); });
+        return m;
+      });
+
+      // Gom vị trí theo chữ số ở kỳ n-2 để sinh ứng viên trúng kỳ cuối (n-2 -> n-1) cực nhanh
+      const posByDigit = Array.from({ length: 10 }, () => []);
+      for (let p = 0; p < NPOS; p++) posByDigit[vec[n - 2][p]].push(p);
+
+      const candSet = new Set();
+      const candList = [];
+
+      if (orderMode === 'exact') {
+        exactMaps[n - 1].forEach((_, tailStr) => {
+          const ds = tailStr.split('').map(Number);
+          if (k === 3) {
+            const A0 = posByDigit[ds[0]], A1 = posByDigit[ds[1]], A2 = posByDigit[ds[2]];
+            for (let i = 0; i < A0.length; i++) {
+              const p1 = A0[i];
+              for (let j = 0; j < A1.length; j++) {
+                const p2 = A1[j];
+                if (p2 <= p1) continue;
+                for (let u = 0; u < A2.length; u++) {
+                  const p3 = A2[u];
+                  if (p3 <= p2) continue;
+                  const key = `${p1},${p2},${p3}`;
+                  if (!candSet.has(key)) { candSet.add(key); candList.push([p1, p2, p3]); }
+                }
+              }
+            }
+          } else {
+            const A0 = posByDigit[ds[0]], A1 = posByDigit[ds[1]], A2 = posByDigit[ds[2]], A3 = posByDigit[ds[3]];
+            for (let i = 0; i < A0.length; i++) {
+              const p1 = A0[i];
+              for (let j = 0; j < A1.length; j++) {
+                const p2 = A1[j];
+                if (p2 <= p1) continue;
+                for (let u = 0; u < A2.length; u++) {
+                  const p3 = A2[u];
+                  if (p3 <= p2) continue;
+                  for (let v = 0; v < A3.length; v++) {
+                    const p4 = A3[v];
+                    if (p4 <= p3) continue;
+                    const key = `${p1},${p2},${p3},${p4}`;
+                    if (!candSet.has(key)) { candSet.add(key); candList.push([p1, p2, p3, p4]); }
+                  }
+                }
+              }
+            }
+          }
+        });
+      } else {
+        // Hoán vị / đảo: lấy thêm cả giao với kỳ n-3 -> n-2 nếu có để ưu tiên cầu ăn thông >= 2 kỳ
+        sortedMaps[n - 1].forEach((_, sortedKey) => {
+          const counts = {};
+          for (const ch of sortedKey) counts[ch] = (counts[ch] || 0) + 1;
+          const digits = Object.keys(counts).map(Number);
+          const groupLists = digits.map(d => chooseCombos(posByDigit[d], counts[d]));
+
+          function combineGroups(gIdx, acc) {
+            if (gIdx === groupLists.length) {
+              const combo = acc.slice().sort((a, b) => a - b);
+              const key = combo.join(',');
+              if (!candSet.has(key)) {
+                candSet.add(key);
+                candList.push(combo);
+              }
+              return;
+            }
+            const opts = groupLists[gIdx];
+            for (let i = 0; i < opts.length; i++) {
+              combineGroups(gIdx + 1, acc.concat(opts[i]));
+            }
+          }
+          combineGroups(0, []);
+        });
+      }
+
+      function hitsAt(t, ps) {
+        if (orderMode === 'exact') {
+          let s = '';
+          for (let i = 0; i < ps.length; i++) s += vec[t][ps[i]];
+          return exactMaps[t + 1].get(s) || null;
+        } else {
+          const arr = new Array(ps.length);
+          for (let i = 0; i < ps.length; i++) arr[i] = vec[t][ps[i]];
+          arr.sort();
+          return sortedMaps[t + 1].get(arr.join('')) || null;
+        }
+      }
+
+      const strong = [];
+      const weakList = [];
+      for (let idx = 0; idx < candList.length; idx++) {
+        const ps = candList[idx];
+        let s = 0;
+        for (let t = n - 2; t >= 0; t--) {
+          if (hitsAt(t, ps)) s++;
+          else break;
+        }
+        if (s >= 2) {
+          let total = s;
+          let dbHits = 0;
+          for (let t = n - 2; t >= n - 1 - s; t--) {
+            const h = hitsAt(t, ps);
+            if (h && h.some(x => x.pz === 'DB')) dbHits++;
+          }
+          for (let t = n - 2 - s; t >= 0; t--) if (hitsAt(t, ps)) total++;
+          strong.push({ ps, s, total, dbHits });
+        } else if (s === 1 && weakList.length < 60) {
+          let total = 1;
+          for (let t = n - 3; t >= 0; t--) if (hitsAt(t, ps)) total++;
+          const hLast = hitsAt(n - 2, ps);
+          const dbHits = hLast && hLast.some(x => x.pz === 'DB') ? 1 : 0;
+          weakList.push({ ps, s: 1, total, dbHits });
+        }
+      }
+
+      const useWeak = strong.length === 0;
+      const pool = useWeak ? weakList : strong;
+      pool.sort((a, b) => b.s - a.s || b.dbHits - a.dbHits || b.total - a.total || a.ps[0] - b.ps[0]);
+
+      // Tính độ hội tụ cụm số dự đoán cho kỳ tiếp theo
+      const maxS = pool.length ? pool[0].s : 0;
+      const topFilter = pool.filter(x => x.s >= Math.max(2, maxS - 1));
+      const clusterPool = topFilter.length ? topFilter : pool;
+      const clusterVotes = new Map();
+      clusterPool.forEach(item => {
+        const digits = item.ps.map(p => vec[n - 1][p]);
+        const direct = digits.join('');
+        const key = orderMode === 'exact' ? direct : digits.slice().sort().join('');
+        if (!clusterVotes.has(key)) clusterVotes.set(key, { key, direct, digits, count: 0, maxS: item.s });
+        const entry = clusterVotes.get(key);
+        entry.count++;
+        if (item.s > entry.maxS) entry.maxS = item.s;
+      });
+      const consensus = [...clusterVotes.values()].sort((a, b) => b.maxS - a.maxS || b.count - a.count || a.direct.localeCompare(b.direct)).slice(0, 5);
+
+      const topItems = pool.slice(0, maxN || 25).map(item => {
+        const predDigits = item.ps.map(p => vec[n - 1][p]);
+        const direct = predDigits.join('');
+        const perms = uniquePermutations(predDigits);
+        const history = [];
+        for (let t = Math.max(0, n - 1 - Math.max(item.s, 3)); t < n - 1; t++) {
+          const dArr = item.ps.map(p => vec[t][p]);
+          const hits = hitsAt(t, item.ps) || [];
+          history.push({
+            fromDate: draws[t].date,
+            toDate: draws[t + 1].date,
+            digits: dArr,
+            direct: dArr.join(''),
+            hits
+          });
+        }
+        return {
+          ...item,
+          predDigits,
+          direct,
+          perms,
+          history
+        };
+      });
+
+      return {
+        draws,
+        list: topItems,
+        count: useWeak ? 0 : strong.length,
+        maxStreak: maxS,
+        weak: useWeak,
+        consensus,
+        k,
+        scope,
+        orderMode
+      };
+    }
+
+    // ======================================================================
+    // TÍNH TOÁN
+    // ======================================================================
+    function computeCaches() {
+      const run = trailingRun(fullDraws);
+      let pos = findPosBridges(fullDraws, 2, 10);
+      let posWeak = false;
+      if (!pos.list.length) {          // không có cầu nào ăn thông >= 2 kỳ → lấy vài cầu trúng kỳ gần nhất, ghi rõ là yếu
+        const w = findPosBridges(fullDraws, 1, 5);
+        if (w.list.length) { pos = { draws: w.draws, list: w.list, count: 0 }; posWeak = true; }
+      }
+      const ms = buildMultiSum(fullDraws);
+      const flat = buildFlat(run);
+      let phoiRaw = findDbBridges(ALL_DAYS, 21, 2, 4);
+      let phoiWeak = false;
+      if (!phoiRaw.list.length) {
+        const w = findDbBridges(ALL_DAYS, 21, 1, 0);
+        if (w.list.length) {
+          w.list.sort((p, q) => q.total - p.total || q.trials - p.trials || (p.L1 + p.L2) - (q.L1 + q.L2));
+          phoiRaw = { run: w.run, list: w.list.slice(0, 4), count: 0 };
+          phoiWeak = true;
+        }
+      }
+      BR = { run, pos, posWeak, ms, flat, phoi: phoiRaw, phoiWeak, phoiPresets: phoiRaw.list.map((b, k) => buildPhoiPreset(phoiRaw.run, b, k)) };
+    }
+
+    // Lý do không có cầu: chuỗi ngày bị ngắt hay đơn giản là không tìm được cặp nào
+    function gapNote(runArr, allArr) {
+      if (allArr.length > runArr.length && runArr.length) {
+        return `Chuỗi ngày liên tiếp đang bị ngắt: chỉ dùng được ${runArr.length} kỳ gần nhất (${runArr[0].date} → ${runArr[runArr.length - 1].date}) vì thiếu kỳ ${addDaysDMY(runArr[0].date, -1)}. Nhập bổ sung kỳ còn thiếu để nối lại chuỗi.`;
+      }
+      return '';
+    }
+
+    function buildPhoiPreset(run, b, k) {
+      const W = 5;
+      const n = run.length;
+      const nextDate = addDaysDMY(run[n - 1].date, 1);
+      const nd = parseDMY(nextDate);
+      const firstSun = new Date(nd.getTime() - (nd.getUTCDay() + 7 * (W - 1)) * 86400000);
+      const dbByDate = new Map(ALL_DAYS.map(r => [r.date, r.DB[0]]));
+      const grid = [];
+      for (let r = 0; r < 7; r++) {
+        const row = [];
+        for (let c = 0; c < W; c++) {
+          const dt = new Date(firstSun.getTime() + (c * 7 + r) * 86400000);
+          const ds = fmtDMY(dt);
+          if (dt.getTime() > nd.getTime()) row.push(null);
+          else if (ds === nextDate) row.push('?????');
+          else row.push(dbByDate.get(ds) || null);
+        }
+        grid.push(row);
+      }
+      const cellOf = ds => {
+        const off = Math.round((parseDMY(ds).getTime() - firstSun.getTime()) / 86400000);
+        return { r: off % 7, c: Math.floor(off / 7), ok: off >= 0 && off < 7 * W };
+      };
+      const paths = [];
+      const showHits = Math.min(b.s, 3);
+      for (let t = n - showHits; t <= n; t++) {
+        const td = addDaysDMY(nextDate, t - n);
+        const n1 = cellOf(addDaysDMY(td, -b.L1)), n2 = cellOf(addDaysDMY(td, -b.L2)), tg = cellOf(td);
+        if (!n1.ok || !n2.ok || !tg.ok) continue;
+        paths.push({ nodes: [[n1.r, n1.c, b.i1, 'green'], [n2.r, n2.c, b.i2, 'blue']], target: [tg.r, tg.c, (n - t) % 2 === 0 ? 'green' : 'cyan'] });
+      }
+      const bo = boOf(b.a, b.b);
+      const x = b.a, y = b.b;
+      const colHeaders = [];
+      for (let c = 0; c < W; c++) colHeaders.push(shortDM(fmtDMY(new Date(firstSun.getTime() + c * 7 * 86400000))));
+      return {
+        title: 'SOI CẦU MB', dateLabel: shortDM(nextDate),
+        headLabel: x === y ? `CHẠM ${x}` : `CHẠM ${x} - ${y}`,
+        boLabel: bo.name.toUpperCase(), boNumbers: bo.list.join(','),
+        stdLabel: x === y ? `${x}${y}` : `${x}${y}, ${y}${x}`,
+        grid, rowLabels: ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'], colHeaders, paths,
+        note: (b.s === 1 ? 'Chưa có phôi nào ăn thông từ 2 kỳ liên tiếp; đây chỉ là các phôi trúng kỳ gần nhất nên độ tin cậy rất thấp. ' : '') + `Ghép chữ số thứ ${b.i1 + 1} của ĐB cách ${b.L1} ngày với chữ số thứ ${b.i2 + 1} của ĐB cách ${b.L2} ngày thành 2 số cuối ĐB (đảo thứ tự cũng tính). Ăn ${b.s} kỳ liên tiếp gần nhất; trên ${b.trials} kỳ kiểm tra được ${b.total} kỳ trúng.`,
+        label: `Phôi ${k + 1}${b.s === 1 ? ' [YẾU]' : ''} (${shortDM(nextDate)} • ăn ${b.s} kỳ • ĐB cách ${b.L1} ngày [số ${b.i1 + 1}] + ĐB cách ${b.L2} ngày [số ${b.i2 + 1}]): Chạm ${x === y ? x : x + '/' + y} • ${bo.name} • STĐ ${x === y ? '' + x + y : '' + x + y + ', ' + y + x}`
+      };
+    }
+
+    // ======================================================================
+    // THANH TRẠNG THÁI + GHI CHÚ TRUNG THỰC
+    // ======================================================================
+    function renderStatusBars() {
+      const run = BR.run, n = run.length;
+      const lastAny = ALL_DAYS[ALL_DAYS.length - 1];
+      const lastFull = fullDraws[fullDraws.length - 1];
+      let html;
+      if (!n) {
+        html = '<b>Chưa có kỳ nào đủ 27 giải.</b> Hãy nhập hoặc dán kết quả đủ 27 giải ở tab "Sổ Kết Quả & Nhập Liệu".';
+      } else {
+        const next = addDaysDMY(run[n - 1].date, 1);
+        html = `<b>Dữ liệu dò cầu:</b> ${n} kỳ đủ 27 giải liên tiếp (${run[0].date} → ${run[n - 1].date}). Đang dò cầu cho kỳ <b class="text-amber-300">${dowOfDMY(next)}, ${next}</b>.`;
+        if (fullDraws.length > n) html += ` <span class="text-amber-300">⚠ Chuỗi bị ngắt: thiếu kỳ ${addDaysDMY(run[0].date, -1)} (hoặc kỳ này chưa đủ 27 giải), nên ${fullDraws.length - n} kỳ cũ hơn không được dùng. Nhập bổ sung kỳ còn thiếu để nối lại chuỗi.</span>`;
+        if (lastAny && lastFull && dmyKey(lastAny.date) > dmyKey(lastFull.date)) {
+          html += ` <span class="text-amber-300">⚠ Kỳ ${lastAny.date} mới có ĐB/G1/G7 nên cầu vị trí và cộng tổng vẫn tính đến ${lastFull.date}. Nhập đủ 27 giải của kỳ ${lastAny.date} để các cầu này cập nhật.</span>`;
+        }
+        if (n < 8) html += ` <span class="text-amber-300">Dữ liệu còn ít (${n} kỳ) nên số cầu "ăn thông" tìm được chủ yếu là trùng hợp.</span>`;
+      }
+      html += '<div class="mt-1 text-slate-400">Xổ số là ngẫu nhiên: cầu "ăn thông" trên vài ngày dữ liệu hầu hết chỉ là trùng hợp thống kê (dò càng nhiều vị trí càng dễ gặp), không đảm bảo kỳ sau trúng. Dùng để tham khảo, không nên coi là căn cứ đặt cược.</div>';
+      ['bridgeStatusMulti', 'bridgeStatusVisual', 'bridgeStatusTail34'].forEach(id => { const el = $(id); if (el) el.innerHTML = html; });
+    }
+
+    // ======================================================================
+    // DANH SÁCH CHỌN (select) THEO KẾT QUẢ DÒ CẦU
+    // ======================================================================
+    function posBridgeLabel(b, k) {
+      return `Cầu ${k + 1}${b.s === 1 ? ' [YẾU]' : ''}: ${POS_META[b.A].lbl} + ${POS_META[b.B].lbl} (Ăn ${b.s} kỳ → ${b.a}${b.b}) ⇒ Báo ${pairStd(b.a, b.b)}`;
+    }
+
+    function populateBridgeSelects() {
+      // cầu vị trí
+      let html = BR.pos.list.map((b, k) => `<option value="${k}">${esc(posBridgeLabel(b, k))}</option>`).join('');
+      const sb = sampleBridge();
+      if (sb) html += `<option value="sample">${esc(sb.label)}</option>`;
+      if (!html) html = '<option value="none">Chưa có cặp vị trí nào ăn thông từ 2 kỳ liên tiếp</option>';
+      $('selectPosBridge').innerHTML = html;
+
+      // phôi ĐB
+      html = BR.phoiPresets.length
+        ? BR.phoiPresets.map((p, k) => `<option value="${k}">${esc(p.label)}</option>`).join('')
+        : '<option value="none">Chưa có phôi nào để vẽ — xem lý do ngay bên dưới</option>';
+      html += '<option value="sample">Phôi Mẫu Ảnh 2 (kiểm chứng kỳ 30/10): Đầu 9 • Bộ 44 • STĐ 94, 99 — cố định</option>';
+      $('selectMatrixBridge').innerHTML = html;
+
+      // cộng tổng
+      const combos = BR.ms.combos;
+      if (combos.length) {
+        $('selectMultiSumCombo').innerHTML = combos.map((c, i) =>
+          `<option value="${i}">${esc(c.name)}: Đầu ${c.a} + Đuôi ${c.b} = BTĐ ${c.btd} (STĐ ${c.std.replace(' - ', '-')})</option>`).join('');
+      } else {
+        $('selectMultiSumCombo').innerHTML = '<option value="none">Chưa đủ dữ liệu (cần ít nhất 5 kỳ liên tiếp đủ 27 giải)</option>';
+      }
+
+      // pascal
+      const h = historyData;
+      if (h.length >= 3) {
+        const [d0, d1, d2] = h;
+        $('selectPascalMode').innerHTML = `
+          <option value="db_g1">Chuẩn: ĐB (${shortDM(d0.date)}) + Giải Nhất (${shortDM(d0.date)})</option>
+          <option value="db_2days">Xuyên Ngày: ĐB (${shortDM(d1.date)}) + ĐB (${shortDM(d0.date)})</option>
+          <option value="db_g1_g7">Đa Giải: ĐB (${shortDM(d0.date)}) + G1 (${shortDM(d0.date)}) + G7.1 (${shortDM(d0.date)})</option>
+          <option value="db_3days">Xuyên 3 Ngày: ĐB (${shortDM(d2.date)}) + ĐB (${shortDM(d1.date)}) + ĐB (${shortDM(d0.date)})</option>`;
+      }
+    }
+
+    // ======================================================================
+    // KIỂU 1: CẦU VỊ TRÍ 107 CHỮ SỐ
+    // ======================================================================
+    let curPos = null;
+
+    function digitSpans(slot, pz, idx, str, idA, idB, big) {
+      return String(str).split('').map((ch, c) => {
+        const pid = `${pz}-${idx}-${c}`;
+        const circle = (pid === idA || pid === idB);
+        const size = big ? 'w-5 h-7 sm:w-6 sm:h-7' : 'w-4 h-5 sm:w-5 sm:h-6';
+        return `<span id="d${slot}_${pid}" class="inline-flex items-center justify-center ${size} rounded-full font-mono ${
+          circle ? 'bg-red-100 text-red-700 font-extrabold ring-2 ring-red-600 relative z-20' : ''}">${ch}</span>`;
+      }).join('');
+    }
+
+    function dayColumnHtml(d, slot, idA, idB) {
+      const cell = (pz, i) => `<div>${digitSpans(slot, pz, i, d[pz][i], idA, idB, false)}</div>`;
+      const lbl = (t) => `<td class="py-1 text-[11px] font-semibold text-slate-600 border-r border-slate-200 w-12">${t}</td>`;
+      const GRID = { 2: 'grid grid-cols-2', 3: 'grid grid-cols-3', 4: 'grid grid-cols-4' };
+      const rowOf = (pz, from, to, cols) => `<div class="${GRID[cols]}">${Array.from({ length: to - from }, (_, k) => cell(pz, from + k)).join('')}</div>`;
+      const ring = slot > 0 ? 'ring-2 ring-red-600 bg-red-50' : '';
+      return `
+        <div class="text-xs select-none">
+          <div class="bg-amber-50/90 border-b border-slate-300 px-3 py-2 font-bold text-red-800 underline">
+            XSMB » XSMB ${dowOfDMY(d.date)} » XSMB ${d.date}
+          </div>
+          <table class="w-full border-collapse text-center"><tbody>
+            <tr class="border-b border-slate-200">${lbl('G.ĐB')}
+              <td class="py-1.5"><span id="d${slot}_DB_TARGET" class="inline-flex items-center px-3 py-0.5 rounded-full ${ring}">
+                <span class="text-red-600 font-extrabold text-lg tracking-wider font-mono">${digitSpans(slot, 'DB', 0, d.DB[0], idA, idB, true)}</span></span></td></tr>
+            <tr class="border-b border-slate-200 bg-slate-50/50">${lbl('G.1')}<td class="py-1 font-bold text-sm">${digitSpans(slot, 'G1', 0, d.G1[0], idA, idB, false)}</td></tr>
+            <tr class="border-b border-slate-200">${lbl('G.2')}<td class="py-1 font-bold text-sm">${rowOf('G2', 0, 2, 2)}</td></tr>
+            <tr class="border-b border-slate-200 bg-slate-50/50">${lbl('G.3')}<td class="py-1 font-bold text-sm space-y-1">${rowOf('G3', 0, 3, 3)}${rowOf('G3', 3, 6, 3)}</td></tr>
+            <tr class="border-b border-slate-200">${lbl('G.4')}<td class="py-1 font-bold text-sm">${rowOf('G4', 0, 4, 4)}</td></tr>
+            <tr class="border-b border-slate-200 bg-slate-50/50">${lbl('G.5')}<td class="py-1 font-bold text-sm space-y-1">${rowOf('G5', 0, 3, 3)}${rowOf('G5', 3, 6, 3)}</td></tr>
+            <tr class="border-b border-slate-200">${lbl('G.6')}<td class="py-1 font-bold text-sm">${rowOf('G6', 0, 3, 3)}</td></tr>
+            <tr>${lbl('G.7')}<td class="py-1.5 font-extrabold text-sm text-red-600">${rowOf('G7', 0, 4, 4)}</td></tr>
+          </tbody></table>
+        </div>`;
+    }
+
+    function renderPosBridgeBoard() {
+      const sel = $('selectPosBridge').value;
+      const bar = $('posBridgeSummaryBar'), colsEl = $('posBoardColumns'), svg = $('posBridgeSvg');
+      let b = null;
+      if (sel === 'sample') b = sampleBridge();
+      else if (sel !== 'none') b = BR.pos.list[Number(sel)];
+      curPos = null;
+      if (!b) {
+        bar.innerHTML = `<span class="text-slate-300">${esc(gapNote(BR.run, fullDraws) || `Chưa có cặp vị trí nào trúng kỳ gần nhất trong ${BR.run.length} kỳ đủ 27 giải hiện có.`)} Nhập thêm kỳ mới (đủ 27 giải) rồi xem lại.</span>`;
+        colsEl.innerHTML = ''; svg.innerHTML = '';
+        return;
+      }
+      const run = BR.run;
+      const endIdx = b.endIdx != null ? b.endIdx : run.length - 1;
+      const cols = Math.min(b.s + 1, 4);
+      const days = run.slice(endIdx - cols + 1, endIdx + 1);
+      const idA = POS_META[b.A].id, idB = POS_META[b.B].id;
+      const last = days[cols - 1];
+      const v = dayVec(last);
+      const a = v[b.A], bb = v[b.B];
+      const nextDate = addDaysDMY(last.date, 1);
+      const actual = run[endIdx + 1];
+      const parts = [];
+      for (let k = 0; k < cols - 1; k++) {
+        const vk = dayVec(days[k]);
+        parts.push(`Ngày ${shortDM(days[k].date)}: ${vk[b.A]}+${vk[b.B]} → nổ ĐB ${days[k + 1].DB[0]} (${deOf(days[k + 1])})`);
+      }
+      parts.push(`Ngày ${shortDM(last.date)}: ${a}+${bb} → ${actual ? 'thực tế ĐB ' + actual.DB[0] : 'Dự đoán ' + shortDM(nextDate) + ': ' + pairStd(a, bb)}`);
+      const bo = boOf(a, bb);
+      const boText = b.boName || `${bo.name} (${bo.list.join(', ')})`;
+      bar.innerHTML = `
+        <div class="space-y-0.5">
+          <span class="font-bold text-amber-400 block">Cầu: ${esc(POS_META[b.A].name)} ghép ${esc(POS_META[b.B].name)}</span>
+          <span class="text-slate-300 block">${esc(parts.join(' • '))}</span>
+          <span class="text-slate-500 block">Trên toàn bộ ${run.length - 1} cặp ngày liên tiếp có ${b.total} cặp trúng${b.note ? ' • ' + esc(b.note) : ''}</span>
+          ${b.s === 1 ? '<span class="text-amber-300 block">⚠ Chưa có cầu nào ăn thông từ 2 kỳ liên tiếp; đây chỉ là cầu trúng kỳ gần nhất nên độ tin cậy rất thấp.</span>' : ''}
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="px-3 py-1.5 rounded-xl bg-red-600 text-white font-mono font-extrabold text-sm shadow">STĐ: ${pairStd(a, bb)}</span>
+          <span class="px-3 py-1.5 rounded-xl bg-amber-500/20 text-amber-300 border border-amber-500/40 font-mono font-bold text-xs">${esc(boText)}</span>
+        </div>`;
+
+      colsEl.style.gridTemplateColumns = `repeat(${cols}, minmax(0, 1fr))`;
+      $('posBoardWrapper').style.minWidth = (cols * 380) + 'px';
+      colsEl.innerHTML = days.map((d, slot) => dayColumnHtml(d, slot, idA, idB)).join('');
+      curPos = { idA, idB, cols };
+      requestAnimationFrame(drawPosBridgeLines);
+    }
+
+    function drawPosBridgeLines() {
+      const wrapper = $('posBoardWrapper'), svg = $('posBridgeSvg');
+      if (!wrapper || !svg) return;
+      if (!curPos) { svg.innerHTML = ''; return; }
+      const wRect = wrapper.getBoundingClientRect();
+      svg.setAttribute('viewBox', `0 0 ${wRect.width} ${wRect.height}`);
+      let html = '';
+      for (let slot = 0; slot < curPos.cols - 1; slot++) {
+        const pA = getCenterRel($(`d${slot}_${curPos.idA}`), wRect);
+        const pB = getCenterRel($(`d${slot}_${curPos.idB}`), wRect);
+        const pT = getCenterRel($(`d${slot + 1}_DB_TARGET`), wRect);
+        if (pA && pB && pT) {
+          html += `<line x1="${pA.x}" y1="${pA.y}" x2="${pB.x}" y2="${pB.y}" stroke="#dc2626" stroke-width="2.6" stroke-linecap="round" />
+                   <line x1="${pA.x}" y1="${pA.y}" x2="${pT.x - 18}" y2="${pT.y + 4}" stroke="#dc2626" stroke-width="2.8" stroke-linecap="round" />`;
+        }
+      }
+      const lastSlot = curPos.cols - 1;
+      const pA2 = getCenterRel($(`d${lastSlot}_${curPos.idA}`), wRect);
+      const pB2 = getCenterRel($(`d${lastSlot}_${curPos.idB}`), wRect);
+      if (pA2 && pB2) {
+        html += `<line x1="${pA2.x}" y1="${pA2.y}" x2="${pB2.x}" y2="${pB2.y}" stroke="#dc2626" stroke-width="2.8" stroke-dasharray="5,3" stroke-linecap="round" />`;
+      }
+      svg.innerHTML = html;
+    }
+
+    // ======================================================================
+    // KIỂU 2: PHÔI LỊCH ĐẶC BIỆT
+    // ======================================================================
+    let curPhoi = null;
+
+    function renderMatrixBridgeBoard() {
+      const sel = $('selectMatrixBridge').value;
+      const preset = sel === 'sample' ? SAMPLE_PHOI : BR.phoiPresets[Number(sel)];
+      curPhoi = null;
+      const content = $('matrixBoardContent');
+      const note = $('matrixSummaryBar');
+      if (!preset) {
+        content.innerHTML = '';
+        $('matrixBridgeSvg').innerHTML = '';
+        if (note) {
+          const run = BR.phoi.run, g = gapNote(run, ALL_DAYS);
+          note.textContent = g || (run.length < 3
+            ? `Mới có ${run.length} kỳ liên tiếp nên chưa dò được phôi. Cần ít nhất 3 kỳ ĐB liên tiếp.`
+            : `Đã dò hơn 5.000 cặp chữ số ĐB trong ${run.length} kỳ liên tiếp nhưng chưa có cặp nào trúng kỳ gần nhất. Nhập thêm kỳ mới rồi xem lại. Muốn xem ảnh mẫu cố định thì chọn "Phôi Mẫu Ảnh 2".`);
+        }
+        return;
+      }
+      curPhoi = preset;
+      if (note) note.innerHTML = esc(preset.note || '');
+      const grid = preset.grid;
+      const nCols = grid[0].length;
+      const boxLookup = {}, targetLookup = {};
+      preset.paths.forEach(p => {
+        p.nodes.forEach(([r, c, dIdx, color]) => { boxLookup[`${r}_${c}_${dIdx}`] = color; });
+        const [tr, tc, tColor] = p.target;
+        targetLookup[`${tr}_${tc}`] = tColor;
+      });
+
+      let tableHtml = `<div class="col-span-9 border-r-2 border-red-300"><table class="w-full border-collapse"><tbody>`;
+      if (preset.colHeaders) {
+        tableHtml += `<tr class="border-b border-red-300 bg-amber-100/60"><td class="w-8"></td>${preset.colHeaders.map(h => `<td class="py-1 text-center text-[10px] font-semibold text-slate-500">tuần ${h}</td>`).join('')}</tr>`;
+      }
+      for (let r = 0; r < grid.length; r++) {
+        tableHtml += `<tr class="border-b border-red-200">`;
+        if (preset.rowLabels) tableHtml += `<td class="w-8 text-center text-[10px] font-bold text-slate-500 bg-amber-100/60 border-r border-red-200">${preset.rowLabels[r]}</td>`;
+        for (let c = 0; c < nCols; c++) {
+          const val = grid[r][c];
+          const isTarget = targetLookup[`${r}_${c}`];
+          const hasBox = [0, 1, 2, 3, 4].some(dIdx => boxLookup[`${r}_${c}_${dIdx}`]);
+          const cellBg = (hasBox || isTarget) ? 'bg-amber-300/70' : (r % 2 === 0 ? 'bg-[#fdf8ee]' : 'bg-white');
+          let inner = '';
+          if (val === null || val === undefined) {
+            inner = `<span class="text-slate-300">·</span>`;
+          } else if (val === '?????') {
+            inner = `<span id="mTarget_${r}_${c}" class="inline-flex items-center justify-center w-9 h-9 rounded-full bg-lime-400 border-2 border-indigo-700 font-extrabold text-indigo-950 text-xs">${preset.dateLabel}</span>`;
+          } else {
+            const boxCls = (bColor, base) => bColor === 'green'
+              ? 'bg-lime-400 ring-2 ring-indigo-700 rounded px-0.5 font-extrabold text-slate-950 relative z-20'
+              : (bColor === 'blue' ? 'bg-sky-300 ring-2 ring-indigo-700 rounded px-0.5 font-extrabold text-slate-950 relative z-20' : base);
+            const first3 = val.slice(0, 3).split('').map((ch, dIdx) =>
+              `<span id="mCell_${r}_${c}_${dIdx}" class="inline-block ${boxCls(boxLookup[`${r}_${c}_${dIdx}`], 'text-slate-900')}">${ch}</span>`).join('');
+            const last2 = [3, 4].map(dIdx =>
+              `<span id="mCell_${r}_${c}_${dIdx}" class="inline-block ${boxCls(boxLookup[`${r}_${c}_${dIdx}`], 'text-red-700')}">${val[dIdx]}</span>`).join('');
+            if (isTarget) {
+              const circleBg = isTarget === 'green' ? 'bg-lime-400/90' : 'bg-sky-200/95';
+              const inCircle = [3, 4].map(dIdx =>
+                `<span id="mCell_${r}_${c}_${dIdx}" class="inline-block ${boxCls(boxLookup[`${r}_${c}_${dIdx}`], 'text-red-700')}">${val[dIdx]}</span>`).join('');
+              inner = `${first3}<span id="mTarget_${r}_${c}" class="inline-flex items-center justify-center w-10 h-10 rounded-full ${circleBg} border-2 border-indigo-700 font-extrabold text-red-700 ml-0.5 relative z-10">${inCircle}</span>`;
+            } else {
+              inner = first3 + last2;
+            }
+          }
+          tableHtml += `<td class="py-2.5 px-1 text-center font-mono text-base sm:text-lg font-semibold border-r border-red-200 ${cellBg}">${inner}</td>`;
+        }
+        tableHtml += `</tr>`;
+      }
+      tableHtml += `</tbody></table></div>`;
+
+      const summaryHtml = `
+        <div class="col-span-3 flex flex-col justify-between p-4 text-center bg-[#fffdf7] select-none">
+          <div class="space-y-1 border-b border-red-200 pb-3">
+            <div class="text-lg sm:text-xl font-black text-blue-800 tracking-tight">${esc(preset.title)}</div>
+            <div class="text-xl sm:text-2xl font-black text-blue-700">${esc(preset.dateLabel)}</div>
+          </div>
+          <div class="space-y-2 my-auto py-3">
+            <div class="text-xl sm:text-2xl font-black text-red-700">${esc(preset.headLabel)}</div>
+            <div class="text-xl sm:text-2xl font-black text-red-700">${esc(preset.boLabel)}</div>
+            <div class="text-sm sm:text-base font-extrabold text-red-600 tracking-tight break-words">${esc(preset.boNumbers)}</div>
+          </div>
+          <div class="border-t border-red-200 pt-3 space-y-1">
+            <div class="text-lg sm:text-xl font-black text-blue-800">STĐ</div>
+            <div class="text-2xl sm:text-3xl font-black text-red-600">${esc(preset.stdLabel)}</div>
+          </div>
+        </div>`;
+      content.innerHTML = tableHtml + summaryHtml;
+      requestAnimationFrame(drawMatrixBridgeCurves);
+    }
+
+    function drawMatrixBridgeCurves() {
+      const wrapper = $('matrixBoardWrapper'), svg = $('matrixBridgeSvg');
+      if (!wrapper || !svg) return;
+      if (!curPhoi) { svg.innerHTML = ''; return; }
+      const wRect = wrapper.getBoundingClientRect();
+      svg.setAttribute('viewBox', `0 0 ${wRect.width} ${wRect.height}`);
+      let html = '';
+      curPhoi.paths.forEach(p => {
+        const pts = [];
+        p.nodes.forEach(([r, c, dIdx]) => {
+          const pt = getCenterRel($(`mCell_${r}_${c}_${dIdx}`), wRect);
+          if (pt) pts.push(pt);
+        });
+        const tPt = getCenterRel($(`mTarget_${p.target[0]}_${p.target[1]}`), wRect);
+        if (tPt) pts.push(tPt);
+        for (let i = 0; i < pts.length - 1; i++) {
+          const p1 = pts[i], p2 = pts[i + 1];
+          const midX = (p1.x + p2.x) / 2, midY = Math.min(p1.y, p2.y) - 18;
+          html += `<path d="M ${p1.x} ${p1.y} Q ${midX} ${midY} ${p2.x} ${p2.y}" fill="none" stroke="#3730a3" stroke-width="3" stroke-linecap="round" />`;
+        }
+      });
+      svg.innerHTML = html;
+    }
+
+    // ======================================================================
+    // SIÊU CẦU CỘNG TỔNG ĐA NGÀY
+    // ======================================================================
+    function evalTermsAtDay(dayIdx, terms) {
+      const mat = BR.flat.matrix;
+      const vals = terms.map(t => {
+        const row = mat[dayIdx - t.lag];
+        return { lag: t.lag, pos: t.pos, date: row.date.slice(0, 5), val: row.map[t.pos] };
+      });
+      return { vals, sumMod10: vals.reduce((acc, x) => acc + x.val, 0) % 10 };
+    }
+
+    function renderMultiKpi() {
+      const k = BR.ms.kpi;
+      const set = (id, t) => { const el = $(id); if (el) el.textContent = t; };
+      if (!k) {
+        ['kpiDauTitle', 'kpiDuoiTitle', 'kpiTongTitle'].forEach((id, i) => set(id, 'Hội tụ ' + ['Đầu', 'Đuôi', 'Tổng'][i] + ' Đề'));
+        ['kpiDauVal', 'kpiDuoiVal', 'kpiTongVal', 'kpiNguThuVal'].forEach(id => set(id, '—'));
+        set('kpiNguThuTitle', 'Ngũ Thủ Đề Hội Tụ Đỉnh Cao');
+        return;
+      }
+      const cntStr = a => `${a[0]} cầu ${k.K3} ngày + ${a[1]} cầu ${k.K2} ngày`;
+      const topStr = (arr, name) => arr.length ? arr.map(x => `${name} ${x.d} (${x.c} cầu)`).join(' • ') : '—';
+      set('kpiDauTitle', `Hội tụ Đầu Đề (${cntStr(k.cnt.dau)})`);
+      set('kpiDuoiTitle', `Hội tụ Đuôi Đề (${cntStr(k.cnt.duoi)})`);
+      set('kpiTongTitle', `Hội tụ Tổng Đề (${cntStr(k.cnt.tong)})`);
+      set('kpiDauVal', topStr(k.topDau, 'Đầu'));
+      set('kpiDuoiVal', topStr(k.topDuoi, 'Đuôi'));
+      set('kpiTongVal', topStr(k.topTong, 'Tổng'));
+      const next = addDaysDMY(BR.run[BR.run.length - 1].date, 1);
+      set('kpiNguThuTitle', `Ngũ Thủ Đề Hội Tụ Đỉnh Cao (${shortDM(next)})`);
+      set('kpiNguThuVal', BR.ms.combos.map(c => c.btd).join(' • ') || '—');
+    }
+
+    function renderMultiSumView() {
+      const ms = BR.ms, mat = BR.flat.matrix;
+      $('multiNDays').textContent = BR.run.length;
+      renderMultiKpi();
+      if (!ms.combos.length) {
+        $('multiSumComboBadge').textContent = 'BTĐ: —';
+        $('multiSumCircuitBox').innerHTML = `<div class="p-3 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-300">Cần ít nhất 5 kỳ liên tiếp đủ 27 giải để dò cầu cộng tổng (hiện có ${BR.run.length}).</div>`;
+        $('multiSumVerifyTableBody').innerHTML = '';
+        $('circuitDate').textContent = '—';
+        return;
+      }
+      const idx = Math.min(Number($('selectMultiSumCombo').value || 0), ms.combos.length - 1);
+      const combo = ms.combos[idx];
+      const nextDate = addDaysDMY(mat[mat.length - 1].date, 1);
+      const nextLabel = `${dowOfDMY(nextDate)}, ${nextDate}`;
+      $('circuitDate').textContent = nextDate;
+      const predDayIdx = mat.length;
+      const pDau = evalTermsAtDay(predDayIdx, combo.dauTerms);
+      const pDuoi = evalTermsAtDay(predDayIdx, combo.duoiTerms);
+      const pTong = evalTermsAtDay(predDayIdx, combo.tongTerms);
+      $('multiSumComboBadge').textContent = `BTĐ: ${combo.btd} • STĐ: ${combo.std}`;
+
+      function renderCircuitRow(title, colorClass, ev, label) {
+        const pills = ev.vals.map(v => `
+          <div class="px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-center">
+            <span class="text-[10px] text-slate-400 block">Kỳ t-${v.lag} (${v.date})</span>
+            <span class="font-mono font-bold text-xs text-amber-300">${v.pos} = <strong class="text-white text-sm">${v.val}</strong></span>
+          </div>`).join('<span class="text-slate-400 font-bold text-sm">+</span>');
+        return `
+          <div class="p-3 rounded-xl bg-slate-950 border border-slate-800 space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold ${colorClass}">${title}</span>
+              <span class="px-2.5 py-0.5 rounded-full bg-slate-900 border border-slate-700 font-mono font-extrabold text-xs text-white">${label}: ${ev.sumMod10}</span>
+            </div>
+            <div class="flex flex-wrap items-center gap-1.5">
+              ${pills}
+              <span class="text-slate-400 font-mono text-xs">(mod 10) =</span>
+              <span class="w-8 h-8 rounded-xl bg-emerald-500 text-slate-950 font-mono font-black text-base flex items-center justify-center shadow">${ev.sumMod10}</span>
+            </div>
+          </div>`;
+      }
+      $('multiSumCircuitBox').innerHTML =
+        renderCircuitRow('1. Mạch Cộng Tổng Tìm ĐẦU ĐỀ', 'text-amber-400', pDau, 'Đầu') +
+        renderCircuitRow('2. Mạch Cộng Tổng Tìm ĐUÔI ĐỀ', 'text-emerald-400', pDuoi, 'Đuôi') +
+        renderCircuitRow('3. Mạch Cộng Tổng Đối Chiếu TỔNG ĐỀ', 'text-sky-400', pTong, 'Tổng') +
+        `<div class="p-3 rounded-xl bg-emerald-500/15 border border-emerald-500/40 flex items-center justify-between">
+          <div>
+            <span class="text-xs text-emerald-300 font-bold block">Kết luận Tổ hợp cho ngày ${nextDate}</span>
+            <span class="text-xs text-slate-300">${esc(combo.bo)}</span>
+          </div>
+          <span class="text-xl font-black font-mono text-amber-400">${combo.btd}</span>
+        </div>`;
+
+      let rows = '';
+      for (let t = combo.startIndex; t <= mat.length; t++) {
+        const dE = evalTermsAtDay(t, combo.dauTerms), uE = evalTermsAtDay(t, combo.duoiTerms), tE = evalTermsAtDay(t, combo.tongTerms);
+        const dauExpr = dE.vals.map(x => x.val).join(' + ') + ` → Đầu ${dE.sumMod10}`;
+        const duoiExpr = uE.vals.map(x => x.val).join(' + ') + ` → Đuôi ${uE.sumMod10}`;
+        const tongExpr = tE.vals.map(x => x.val).join(' + ') + ` → Tổng ${tE.sumMod10}`;
+        const pairStr = `${dE.sumMod10}${uE.sumMod10}`;
+        if (t < mat.length) {
+          const tr = mat[t];
+          rows += `
+            <tr class="hover:bg-slate-950/60">
+              <td class="p-2.5 font-medium text-slate-200">${tr.dow}, ${tr.date}</td>
+              <td class="p-2.5 font-mono text-amber-300">${dauExpr}</td>
+              <td class="p-2.5 font-mono text-emerald-300">${duoiExpr}</td>
+              <td class="p-2.5 font-mono text-sky-300">${tongExpr}</td>
+              <td class="p-2.5"><span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-mono font-bold">${pairStr}</span></td>
+              <td class="p-2.5 font-mono font-bold text-white">${tr.db.slice(0, 3)}<span class="text-amber-400">${tr.de}</span> <span class="text-[10px] text-emerald-400 ml-1">✓ Ăn thông</span></td>
+            </tr>`;
+        } else {
+          rows += `
+            <tr class="bg-amber-500/10 border-t-2 border-amber-500/40">
+              <td class="p-2.5 font-bold text-amber-300">${nextLabel} (Dự đoán)</td>
+              <td class="p-2.5 font-mono font-bold text-amber-300">${dauExpr}</td>
+              <td class="p-2.5 font-mono font-bold text-emerald-300">${duoiExpr}</td>
+              <td class="p-2.5 font-mono font-bold text-sky-300">${tongExpr}</td>
+              <td class="p-2.5"><span class="px-2.5 py-1 rounded bg-amber-500 text-slate-950 font-mono font-black text-sm">${pairStr}</span></td>
+              <td class="p-2.5 font-mono font-bold text-amber-300">STĐ: ${combo.std}</td>
+            </tr>`;
+        }
+      }
+      $('multiSumVerifyTableBody').innerHTML = rows;
+    }
+
+    function initCustomFormulaBuilder() {
+      const optionsHtml = POS_META.map(p => `<option value="${p.lbl}">${p.lbl}</option>`).join('');
+      ['customPos1', 'customPos2', 'customPos3'].forEach(id => { $(id).innerHTML = optionsHtml; });
+      const first = BR.ms.combos[0];
+      const t = first ? first.dauTerms : [{ pos: 'G3.1[3]' }, { pos: 'G5.4[3]' }, { pos: 'G4.4[1]' }];
+      ['customPos1', 'customPos2', 'customPos3'].forEach((id, i) => { if (t[i]) $(id).value = t[i].pos; });
+      if (first) {
+        ['customLag1', 'customLag2', 'customLag3'].forEach((id, i) => { if (t[i]) $(id).value = String(t[i].lag); });
+        $('chkUseTerm3').checked = t.length >= 3;
+      }
+      ['customLag1', 'customPos1', 'customLag2', 'customPos2', 'customLag3', 'customPos3', 'chkUseTerm3'].forEach(id => {
+        $(id).addEventListener('change', evaluateCustomFormula);
+      });
+    }
+
+    function evaluateCustomFormula() {
+      const out = $('customFormulaOutput');
+      const mat = BR.flat.matrix;
+      if (mat.length < 4) {
+        out.innerHTML = '<span class="text-slate-300">Cần ít nhất 4 kỳ liên tiếp đủ 27 giải để thử công thức.</span>';
+        return;
+      }
+      const terms = [
+        { lag: Number($('customLag1').value), pos: $('customPos1').value },
+        { lag: Number($('customLag2').value), pos: $('customPos2').value }
+      ];
+      if ($('chkUseTerm3').checked) terms.push({ lag: Number($('customLag3').value), pos: $('customPos3').value });
+
+      let hitDau = 0, hitDuoi = 0, hitTong = 0, hitCham = 0;
+      const steps = [];
+      for (let t = 3; t < mat.length; t++) {
+        const ev = evalTermsAtDay(t, terms);
+        const de = mat[t].de, dau = Number(de[0]), duoi = Number(de[1]), tong = (dau + duoi) % 10;
+        const isDau = ev.sumMod10 === dau, isDuoi = ev.sumMod10 === duoi, isTong = ev.sumMod10 === tong;
+        if (isDau) hitDau++;
+        if (isDuoi) hitDuoi++;
+        if (isTong) hitTong++;
+        if (isDau || isDuoi) hitCham++;
+        steps.push({ date: mat[t].date.slice(0, 5), de, sum: ev.sumMod10, expr: ev.vals.map(v => v.val).join('+'), isDau, isDuoi, isTong });
+      }
+      const total = mat.length - 3;
+      const pred = evalTermsAtDay(mat.length, terms);
+      const nextDate = addDaysDMY(mat[mat.length - 1].date, 1);
+      const title = terms.map(t => `Kỳ(t-${t.lag})•${t.pos}`).join(' + ') + ' (mod 10)';
+      out.innerHTML = `
+        <div class="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-slate-800">
+          <span class="font-mono text-amber-300 font-semibold">${title}</span>
+          <span class="px-2.5 py-1 rounded-lg bg-emerald-500 text-slate-950 font-mono font-extrabold">Dự đoán ${shortDM(nextDate)}: ${pred.vals.map(v => v.val).join('+')} ≡ ${pred.sumMod10} (mod 10)</span>
+        </div>
+        <div class="grid grid-cols-4 gap-2 text-center py-1">
+          <div class="bg-slate-900 p-1.5 rounded-lg border border-slate-800"><span class="text-[10px] text-slate-400 block">Trúng Đầu</span><span class="font-mono font-bold text-amber-400">${hitDau}/${total} kỳ</span></div>
+          <div class="bg-slate-900 p-1.5 rounded-lg border border-slate-800"><span class="text-[10px] text-slate-400 block">Trúng Đuôi</span><span class="font-mono font-bold text-emerald-400">${hitDuoi}/${total} kỳ</span></div>
+          <div class="bg-slate-900 p-1.5 rounded-lg border border-slate-800"><span class="text-[10px] text-slate-400 block">Trúng Chạm</span><span class="font-mono font-bold text-white">${hitCham}/${total} kỳ</span></div>
+          <div class="bg-slate-900 p-1.5 rounded-lg border border-slate-800"><span class="text-[10px] text-slate-400 block">Trúng Tổng</span><span class="font-mono font-bold text-sky-400">${hitTong}/${total} kỳ</span></div>
+        </div>
+        <div class="flex flex-wrap gap-1.5 pt-1">
+          ${steps.map(s => `
+            <div class="px-2 py-1 rounded bg-slate-900 border ${(s.isDau || s.isDuoi || s.isTong) ? 'border-emerald-500/40 text-emerald-300' : 'border-slate-800 text-slate-400'} font-mono text-[11px]">
+              ${s.date}: (${s.expr})=${s.sum} vs Đề ${s.de}
+            </div>`).join('')}
+        </div>`;
+    }
+
+    function renderPascalPyramid() {
+      const h = historyData;
+      if (h.length < 3) return;
+      const [d0, d1, d2] = h;
+      const mode = $('selectPascalMode').value;
+      let seed = d0.db + d0.g1;
+      let desc = `Ghép Giải ĐB (${d0.db}) + Giải Nhất (${d0.g1}) ngày ${d0.date}`;
+      if (mode === 'db_2days') {
+        seed = d1.db + d0.db;
+        desc = `Ghép Giải ĐB ngày ${shortDM(d1.date)} (${d1.db}) + Giải ĐB ngày ${shortDM(d0.date)} (${d0.db})`;
+      } else if (mode === 'db_g1_g7') {
+        seed = d0.db + d0.g1 + d0.g7[0];
+        desc = `Ghép Giải ĐB (${d0.db}) + Giải Nhất (${d0.g1}) + Giải 7.1 (${d0.g7[0]}) ngày ${d0.date}`;
+      } else if (mode === 'db_3days') {
+        seed = d2.db + d1.db + d0.db;
+        desc = `Ghép Giải ĐB 3 ngày liên tiếp: ${shortDM(d2.date)} (${d2.db}) + ${shortDM(d1.date)} (${d1.db}) + ${shortDM(d0.date)} (${d0.db})`;
+      }
+      const rows = [seed];
+      let curS = seed;
+      while (curS.length > 2) {
+        let nxt = '';
+        for (let i = 0; i < curS.length - 1; i++) nxt += String((Number(curS[i]) + Number(curS[i + 1])) % 10);
+        rows.push(nxt);
+        curS = nxt;
+      }
+      const finalPair = rows[rows.length - 1];
+      const revPair = finalPair.split('').reverse().join('');
+      $('pascalPyramidBox').innerHTML = `
+        <div class="text-xs text-slate-400 font-sans mb-2">${esc(desc)}</div>
+        <div class="space-y-0.5">
+          ${rows.map((r, rIdx) => {
+            const isLast = rIdx === rows.length - 1;
+            const spans = r.split('').map(ch => `<span class="inline-flex items-center justify-center w-5 h-5 sm:w-6 sm:h-6 rounded ${
+              isLast ? 'bg-amber-500 text-slate-950 font-black text-sm mx-0.5 shadow' : 'text-slate-300 text-xs'}">${ch}</span>`).join('');
+            return `<div>${spans}</div>`;
+          }).join('')}
+        </div>
+        <div class="pt-3 mt-2 border-t border-slate-800 font-sans flex items-center justify-center gap-3">
+          <span class="text-xs text-slate-400">Kết quả đáy tháp Pascal:</span>
+          <span class="px-3 py-1 rounded-lg bg-amber-500/20 border border-amber-500/40 text-amber-300 font-mono font-extrabold text-sm">
+            ${finalPair === revPair ? `Bạch Thủ Kép: ${finalPair} (Lót bóng ${(Number(finalPair[0]) + 5) % 10}${(Number(finalPair[1]) + 5) % 10})` : `Song Thủ: ${finalPair} - ${revPair}`}
+          </span>
+        </div>`;
+    }
+
+    // ======================================================================
+    // DÒ CẦU 3 & 4 SỐ ĐUÔI CÁC GIẢI (3 CÀNG / 4 CÀNG)
+    // ======================================================================
+    let curTail34Res = null;
+
+    function scopeNameVi(scope, k) {
+      if (scope === 'db') return `Giải Đặc Biệt (${k} càng ĐB)`;
+      if (scope === 'db_g1') return `Giải ĐB + Giải Nhất`;
+      if (scope === 'db_g6') return k === 3 ? `Giải ĐB + Giải Nhất + Giải 6 (5 giải)` : `Giải ĐB + Giải Nhất`;
+      return k === 3 ? `Tất cả 23 giải (ĐB → Giải 6)` : `Tất cả 20 giải (ĐB → Giải 5)`;
+    }
+
+    function computeAndRenderTail34(keepSelectedIndex) {
+      const k = Number($('selectTail34Len').value || 3);
+      const scopeSel = $('selectTail34Scope');
+      // Điều chỉnh nhãn khi đổi 3D / 4D
+      if (k === 4 && scopeSel.value === 'db_g6') {
+        scopeSel.value = 'db_g1';
+      }
+      const scope = scopeSel.value;
+      const orderMode = $('selectTail34Order').value;
+
+      const prevIdx = keepSelectedIndex ? Number($('selectTail34Bridge').value || 0) : 0;
+      const res = findTail34Bridges(fullDraws, k, scope, orderMode, 25);
+      curTail34Res = res;
+
+      const selEl = $('selectTail34Bridge');
+      if (!res.list.length) {
+        selEl.innerHTML = '<option value="none">Chưa tìm thấy cầu phù hợp</option>';
+      } else {
+        selEl.innerHTML = res.list.map((b, idx) => {
+          const posStr = b.ps.map(p => POS_META[p].lbl).join(' + ');
+          const tag = b.s === 1 ? ' [Trúng kỳ gần nhất]' : ` [Ăn thông ${b.s} kỳ]`;
+          return `<option value="${idx}">Cầu #${idx + 1}${tag}: ${posStr} ⇒ ${b.direct} (${b.perms.length} số)</option>`;
+        }).join('');
+        selEl.value = String(Math.min(prevIdx, res.list.length - 1));
+      }
+
+      renderTail34SelectedBridge();
+      renderTail34ReferenceTable();
+    }
+
+    function renderTail34SelectedBridge() {
+      const res = curTail34Res;
+      if (!res) return;
+      const k = res.k;
+      $('tail34ModeBadge').textContent = `${k}D • ${k} Số Đuôi`;
+
+      const run = res.draws;
+      const nextDate = run.length ? addDaysDMY(run[run.length - 1].date, 1) : '—';
+
+      $('tail34KpiCount').textContent = res.weak
+        ? `0 cầu ≥2 kỳ (hiện ${res.list.length} cầu 1 kỳ)`
+        : `${res.count.toLocaleString('vi-VN')} cầu ăn thông ≥2 kỳ`;
+      $('tail34KpiStreak').textContent = res.maxStreak > 0
+        ? `Ăn thông ${res.maxStreak} kỳ liên tiếp`
+        : '—';
+      $('tail34KpiConsensus').textContent = res.consensus.length
+        ? res.consensus.slice(0, 3).map(c => `${c.direct} (${c.count} cầu)`).join(' • ')
+        : '—';
+
+      if (!res.list.length) {
+        $('tail34KpiDirect').textContent = '—';
+        $('tail34DetailBox').innerHTML = '<div class="text-slate-400">Chưa đủ dữ liệu hoặc chưa có cầu phù hợp với bộ lọc hiện tại. Hãy thử chuyển sang chế độ "Đảo / Hoán vị" hoặc mở rộng phạm vi giải.</div>';
+        $('tail34TopListBox').innerHTML = '';
+        $('tail34HistoryTableBody').innerHTML = '';
+        $('tail34BoardColumns').innerHTML = '';
+        return;
+      }
+
+      const selIdx = Math.min(Math.max(0, Number($('selectTail34Bridge').value || 0)), res.list.length - 1);
+      const b = res.list[selIdx];
+
+      $('tail34KpiDirect').textContent = `${b.direct} (Đảo: ${b.perms.length} số)`;
+      $('tail34TargetBadge').textContent = `Dự đoán ${shortDM(nextDate)}: ${b.direct}`;
+
+      const posDetails = b.ps.map((p, idx) => `
+        <div class="p-2.5 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-between">
+          <div>
+            <span class="text-fuchsia-300 font-mono font-bold">Vị trí ${idx + 1}: ${POS_META[p].lbl}</span>
+            <span class="text-slate-400 block text-[11px]">${esc(POS_META[p].name)}</span>
+          </div>
+          <span class="w-8 h-8 rounded-lg bg-fuchsia-500/20 border border-fuchsia-500/40 text-fuchsia-200 font-mono font-extrabold text-sm flex items-center justify-center">${b.predDigits[idx]}</span>
+        </div>
+      `).join('');
+
+      const permsBadges = b.perms.map(num => `
+        <span class="px-2.5 py-1 rounded-lg font-mono font-bold text-xs ${num === b.direct ? 'bg-amber-500 text-slate-950 shadow' : 'bg-slate-900 text-fuchsia-200 border border-slate-700'}">${num}</span>
+      `).join('');
+
+      $('tail34DetailBox').innerHTML = `
+        <div class="space-y-2">${posDetails}</div>
+        <div class="p-3 rounded-xl bg-slate-950 border border-slate-800 space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="text-slate-400 font-medium">Dàn số dự đoán kỳ ${nextDate} (${b.perms.length} hoán vị):</span>
+            <span class="text-[11px] font-mono text-emerald-400">Thẳng: ${b.direct}</span>
+          </div>
+          <div class="flex flex-wrap gap-1.5">${permsBadges}</div>
+        </div>
+        <div class="text-[11px] text-slate-400">
+          Phạm vi dò: <strong class="text-slate-200">${scopeNameVi(res.scope, k)}</strong> • Đã trúng <strong class="text-emerald-400">${b.total}/${run.length - 1}</strong> cặp ngày trong sổ (${b.dbHits} kỳ nổ thẳng Giải ĐB).
+        </div>
+      `;
+
+      // Render Top 12 list
+      $('tail34TopListBox').innerHTML = res.list.slice(0, 12).map((item, idx) => {
+        const active = idx === selIdx;
+        const posStr = item.ps.map(p => POS_META[p].lbl).join(' + ');
+        return `
+          <button data-t34-idx="${idx}" class="t34-item-btn w-full text-left p-2.5 rounded-xl border transition flex items-center justify-between gap-2 ${
+            active ? 'bg-fuchsia-500/15 border-fuchsia-400 ring-1 ring-fuchsia-400' : 'bg-slate-950 border-slate-800 hover:border-slate-700'
+          }">
+            <div class="min-w-0">
+              <div class="flex items-center gap-1.5">
+                <span class="text-[11px] font-bold text-fuchsia-300">#${idx + 1}</span>
+                <span class="font-mono text-xs font-semibold text-white truncate">${posStr}</span>
+              </div>
+              <div class="text-[11px] text-slate-400 mt-0.5">Ăn thông <strong class="text-emerald-400">${item.s} kỳ</strong> • Tổng trúng ${item.total}/${run.length - 1} kỳ</div>
+            </div>
+            <div class="text-right shrink-0">
+              <span class="px-2.5 py-1 rounded-lg bg-amber-500/20 border border-amber-500/40 text-amber-300 font-mono font-extrabold text-xs block">${item.direct}</span>
+              <span class="text-[10px] text-slate-400">${item.perms.length} số đảo</span>
+            </div>
+          </button>
+        `;
+      }).join('');
+
+      document.querySelectorAll('.t34-item-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          $('selectTail34Bridge').value = btn.getAttribute('data-t34-idx');
+          renderTail34SelectedBridge();
+        });
+      });
+
+      // Render history verification table
+      let histRows = b.history.map(h => {
+        const hitBadges = h.hits.length
+          ? h.hits.map(hit => `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded ${hit.pz === 'DB' ? 'bg-red-500/25 text-red-300 border border-red-500/40' : 'bg-emerald-500/20 text-emerald-300'} font-mono font-bold">${hit.lbl}: ${hit.full.slice(0, -k)}<u class="text-amber-300">${hit.tail}</u></span>`).join(' ')
+          : '<span class="text-slate-500">Không trúng</span>';
+        return `
+          <tr class="hover:bg-slate-950/60">
+            <td class="p-2.5 font-mono text-slate-300">${h.fromDate}</td>
+            <td class="p-2.5 font-mono text-fuchsia-300">${b.ps.map((p, i) => `${POS_META[p].lbl}=${h.digits[i]}`).join(' • ')}</td>
+            <td class="p-2.5 font-mono font-bold text-white">${h.direct}</td>
+            <td class="p-2.5 font-mono text-slate-300">${h.toDate}</td>
+            <td class="p-2.5 space-x-1">${hitBadges}</td>
+          </tr>
+        `;
+      }).join('');
+
+      histRows += `
+        <tr class="bg-fuchsia-500/10 border-t-2 border-fuchsia-500/40">
+          <td class="p-2.5 font-mono font-bold text-fuchsia-300">${run[run.length - 1].date}</td>
+          <td class="p-2.5 font-mono font-bold text-fuchsia-300">${b.ps.map((p, i) => `${POS_META[p].lbl}=${b.predDigits[i]}`).join(' • ')}</td>
+          <td class="p-2.5"><span class="px-2.5 py-0.5 rounded bg-amber-500 text-slate-950 font-mono font-black">${b.direct}</span></td>
+          <td class="p-2.5 font-mono font-bold text-amber-300">${nextDate} (Dự đoán)</td>
+          <td class="p-2.5 font-mono text-amber-200">Dàn ${b.perms.length} số: ${b.perms.join(', ')}</td>
+        </tr>
+      `;
+      $('tail34HistoryTableBody').innerHTML = histRows;
+
+      // Render Visual Board across last min(b.s + 1, 3) days
+      renderTail34VisualBoard(b, res);
+    }
+
+    function renderTail34VisualBoard(b, res) {
+      const run = res.draws;
+      const k = res.k;
+      const cols = Math.min(Math.max(b.s + 1, 2), 3, run.length);
+      const days = run.slice(run.length - cols);
+      const posIdSet = new Set(b.ps.map(p => POS_META[p].id));
+
+      // Xác định giải nào ở cột slot (slot > 0) đã nổ cầu từ cột slot - 1
+      const hitPrizeMap = {};
+      for (let slot = 1; slot < days.length; slot++) {
+        const prevVec = dayVec(days[slot - 1]);
+        const prevDigits = b.ps.map(p => prevVec[p]);
+        const prevDirect = prevDigits.join('');
+        const prevSorted = prevDigits.slice().sort().join('');
+        const tails = extractDayTails(days[slot], k, res.scope);
+        tails.forEach(t => {
+          const matched = res.orderMode === 'exact' ? (t.tail === prevDirect) : (t.sorted === prevSorted);
+          if (matched) hitPrizeMap[`${slot}_${t.pz}_${t.idx}`] = true;
+        });
+      }
+
+      function renderDigits34(slot, pz, idx, str, big) {
+        const isHitPrize = hitPrizeMap[`${slot}_${pz}_${idx}`];
+        const len = str.length;
+        return String(str).split('').map((ch, c) => {
+          const pid = `${pz}-${idx}-${c}`;
+          const isBridgePos = posIdSet.has(pid);
+          const isTailPart = isHitPrize && c >= len - k;
+          const size = big ? 'w-5 h-7 sm:w-6 sm:h-7' : 'w-4 h-5 sm:w-5 sm:h-6';
+          let cls = '';
+          if (isBridgePos && isTailPart) {
+            cls = 'bg-amber-300 text-slate-950 font-black ring-2 ring-fuchsia-700 relative z-20';
+          } else if (isBridgePos) {
+            cls = 'bg-fuchsia-200 text-fuchsia-900 font-extrabold ring-2 ring-fuchsia-600 relative z-20';
+          } else if (isTailPart) {
+            cls = 'bg-emerald-200 text-emerald-950 font-extrabold ring-1 ring-emerald-600';
+          }
+          return `<span class="inline-flex items-center justify-center ${size} rounded-full font-mono ${cls}">${ch}</span>`;
+        }).join('');
+      }
+
+      const GRID = { 2: 'grid grid-cols-2', 3: 'grid grid-cols-3', 4: 'grid grid-cols-4' };
+      const colHtml = days.map((d, slot) => {
+        const cell = (pz, i) => `<div>${renderDigits34(slot, pz, i, d[pz][i], false)}</div>`;
+        const rowOf = (pz, from, to, cCount) => `<div class="${GRID[cCount]}">${Array.from({ length: to - from }, (_, u) => cell(pz, from + u)).join('')}</div>`;
+        const lbl = t => `<td class="py-1 text-[11px] font-semibold text-slate-600 border-r border-slate-200 w-12">${t}</td>`;
+        const v = dayVec(d);
+        const picked = b.ps.map(p => v[p]).join('');
+        return `
+          <div class="text-xs select-none">
+            <div class="bg-fuchsia-50 border-b border-slate-300 px-3 py-2 flex items-center justify-between">
+              <span class="font-bold text-fuchsia-900">${dowOfDMY(d.date)}, ${d.date}</span>
+              <span class="px-2 py-0.5 rounded bg-fuchsia-700 text-white font-mono font-bold text-[11px]">Cầu báo: ${picked}</span>
+            </div>
+            <table class="w-full border-collapse text-center"><tbody>
+              <tr class="border-b border-slate-200">${lbl('G.ĐB')}
+                <td class="py-1.5"><span class="text-red-600 font-extrabold text-lg tracking-wider font-mono">${renderDigits34(slot, 'DB', 0, d.DB[0], true)}</span></td></tr>
+              <tr class="border-b border-slate-200 bg-slate-50/50">${lbl('G.1')}<td class="py-1 font-bold text-sm">${renderDigits34(slot, 'G1', 0, d.G1[0], false)}</td></tr>
+              <tr class="border-b border-slate-200">${lbl('G.2')}<td class="py-1 font-bold text-sm">${rowOf('G2', 0, 2, 2)}</td></tr>
+              <tr class="border-b border-slate-200 bg-slate-50/50">${lbl('G.3')}<td class="py-1 font-bold text-sm space-y-1">${rowOf('G3', 0, 3, 3)}${rowOf('G3', 3, 6, 3)}</td></tr>
+              <tr class="border-b border-slate-200">${lbl('G.4')}<td class="py-1 font-bold text-sm">${rowOf('G4', 0, 4, 4)}</td></tr>
+              <tr class="border-b border-slate-200 bg-slate-50/50">${lbl('G.5')}<td class="py-1 font-bold text-sm space-y-1">${rowOf('G5', 0, 3, 3)}${rowOf('G5', 3, 6, 3)}</td></tr>
+              <tr class="border-b border-slate-200">${lbl('G.6')}<td class="py-1 font-bold text-sm">${rowOf('G6', 0, 3, 3)}</td></tr>
+              <tr>${lbl('G.7')}<td class="py-1.5 font-extrabold text-sm text-red-600">${rowOf('G7', 0, 4, 4)}</td></tr>
+            </tbody></table>
+          </div>
+        `;
+      }).join('');
+
+      const colsEl = $('tail34BoardColumns');
+      colsEl.style.gridTemplateColumns = `repeat(${days.length}, minmax(0, 1fr))`;
+      colsEl.innerHTML = colHtml;
+    }
+
+    function renderTail34ReferenceTable() {
+      const refSel = $('selectTail34RefDay');
+      if (!fullDraws.length) {
+        refSel.innerHTML = '';
+        $('tail34RefGrid').innerHTML = '';
+        return;
+      }
+      const curVal = refSel.value;
+      const rev = fullDraws.slice().reverse();
+      refSel.innerHTML = rev.map((d, idx) => `<option value="${d.date}">${dowOfDMY(d.date)}, ${d.date}${idx === 0 ? ' (Mới nhất)' : ''}</option>`).join('');
+      if (curVal && fullDraws.some(d => d.date === curVal)) refSel.value = curVal;
+
+      const targetDraw = fullDraws.find(d => d.date === refSel.value) || rev[0];
+      const items = [];
+      PRIZE_SHAPE.forEach(([pz, cnt, len]) => {
+        if (len < 3) return;
+        for (let i = 0; i < cnt; i++) {
+          const full = String(targetDraw[pz][i]);
+          const lbl = cnt > 1 ? `${pz}.${i + 1}` : pz;
+          items.push({
+            pz,
+            lbl,
+            full,
+            t3: full.slice(-3),
+            t4: len >= 4 ? full.slice(-4) : '—'
+          });
+        }
+      });
+
+      $('tail34RefGrid').innerHTML = items.map(it => `
+        <div class="p-2.5 rounded-xl bg-slate-950 border ${it.pz === 'DB' ? 'border-amber-500/50 bg-amber-500/5' : 'border-slate-800'} flex flex-col justify-between">
+          <div class="flex items-center justify-between text-[11px]">
+            <span class="font-bold ${it.pz === 'DB' ? 'text-amber-400' : 'text-slate-400'}">${it.lbl}</span>
+            <span class="font-mono text-slate-300">${it.full}</span>
+          </div>
+          <div class="flex items-center justify-between mt-1.5 pt-1.5 border-t border-slate-800/80 font-mono text-xs">
+            <span>3D: <strong class="text-fuchsia-300">${it.t3}</strong></span>
+            <span>4D: <strong class="text-emerald-300">${it.t4}</strong></span>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // ======================================================================
+    // ĐIỀU PHỐI: TAB + LÀM MỚI TOÀN BỘ KHI DỮ LIỆU ĐỔI
+    // ======================================================================
+    function renderTab(tabName) {
+      if (tabName === 'multisum') { renderMultiSumView(); renderPascalPyramid(); evaluateCustomFormula(); }
+      if (tabName === 'visual') { renderPosBridgeBoard(); renderMatrixBridgeBoard(); }
+      if (tabName === 'tail34') { computeAndRenderTail34(true); }
+      if (tabName === 'stats' && latestPredictionResult) renderCharts(latestPredictionResult);
+      if (tabName === 'backtest') runWalkForwardBacktest();
+      if (tabName === 'data') renderHistoryTable();
+    }
+
+    function switchTab(tabName) {
+      currentTab = tabName;
+      const panels = {
+        predict: $('tabPanelPredict'), multisum: $('tabPanelMultiSum'), visual: $('tabPanelVisual'), tail34: $('tabPanelTail34'),
+        stats: $('tabPanelStats'), backtest: $('tabPanelBacktest'), data: $('tabPanelData'), code: $('tabPanelCode')
+      };
+      Object.keys(panels).forEach(k => panels[k].classList.toggle('hidden', k !== tabName));
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.className = btn.getAttribute('data-tab') === tabName
+          ? 'tab-btn px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold bg-amber-500 text-slate-950 transition'
+          : 'tab-btn px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold text-slate-300 hover:text-white transition';
+      });
+      renderTab(tabName);
+    }
+
+    function refreshAll() {
+      computeCaches();
+      populateBridgeSelects();
+      renderStatusBars();
+      try { updateAllViews(); } catch (e) { console.error('updateAllViews:', e); }
+      renderHistoryTable();
+      if (currentTab !== 'multisum') renderTab('multisum');   // luôn giữ tab cộng tổng đồng bộ dù đang ẩn
+      renderTab(currentTab);
+    }
+
+
+    window.addEventListener('DOMContentLoaded', () => {
+      // Tab navigation listeners
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => switchTab(btn.getAttribute('data-tab')));
+      });
+
+      // Sliders & checkboxes
+      ['sliderWeightFreq', 'sliderWeightMarkov', 'sliderWeightBridge', 'sliderWeightGap'].forEach(id => {
+        document.getElementById(id).addEventListener('input', updateAllViews);
+      });
+      document.getElementById('chkPenalizeRecent').addEventListener('change', updateAllViews);
+      document.getElementById('filterTouchSelect').addEventListener('change', updateAllViews);
+
+      document.getElementById('btnResetWeights').addEventListener('click', () => {
+        document.getElementById('sliderWeightFreq').value = 30;
+        document.getElementById('sliderWeightMarkov').value = 30;
+        document.getElementById('sliderWeightBridge').value = 25;
+        document.getElementById('sliderWeightGap').value = 15;
+        document.getElementById('chkPenalizeRecent').checked = true;
+        updateAllViews();
+        showToast('Đã khôi phục trọng số mặc định (30% - 30% - 25% - 15%).');
+      });
+
+      // Dan De size buttons
+      document.querySelectorAll('.dan-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          currentDanSize = Number(btn.getAttribute('data-dan'));
+          document.querySelectorAll('.dan-btn').forEach(b => {
+            if (Number(b.getAttribute('data-dan')) === currentDanSize) {
+              b.className = 'dan-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-500 text-slate-950 transition';
+            } else {
+              b.className = 'dan-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-800 text-slate-300 hover:text-white transition';
+            }
+          });
+          updateAllViews();
+        });
+      });
+
+      document.getElementById('btnCopyDanText').addEventListener('click', () => {
+        copyTextToClipboard(document.getElementById('danNumbersBox').textContent, 'Dàn Đề ' + currentDanSize + ' số');
+      });
+      document.getElementById('btnCopyTop10Quick').addEventListener('click', () => {
+        if (!latestPredictionResult) return;
+        copyTextToClipboard(latestPredictionResult.ranked.slice(0, 10).map(x => x.num).join(', '), 'Top 10 Bạch Thủ Đề');
+      });
+      document.getElementById('btnRunBacktest').addEventListener('click', () => {
+        runWalkForwardBacktest();
+        showToast('Đã cập nhật kết quả kiểm thử lịch sử!');
+      });
+      document.getElementById('searchHistoryInput').addEventListener('input', renderHistoryTable);
+      document.getElementById('btnCopyPythonCode').addEventListener('click', () => {
+        copyTextToClipboard(document.getElementById('pythonCodeBlock').textContent, 'mã nguồn Python');
+      });
+
+      // Nhập liệu (v2): dán nhiều ngày / nhập tay đủ 27 giải, lưu trong trình duyệt
+      $('btnParseRawText').addEventListener('click', handleParse);
+      $('btnAddManualRow').addEventListener('click', handleManual);
+      $('btnUndoLast').addEventListener('click', handleUndo);
+      $('btnResetDataset').addEventListener('click', handleReset);
+      $('inputManualDate').addEventListener('input', () => syncManualDate(false));
+
+      // Chọn cầu
+      $('selectPosBridge').addEventListener('change', renderPosBridgeBoard);
+      $('selectMatrixBridge').addEventListener('change', renderMatrixBridgeBoard);
+      window.addEventListener('resize', () => {
+        if (!$('tabPanelVisual').classList.contains('hidden')) {
+          drawPosBridgeLines();
+          drawMatrixBridgeCurves();
+        }
+      });
+      $('selectMultiSumCombo').addEventListener('change', renderMultiSumView);
+      $('selectPascalMode').addEventListener('change', renderPascalPyramid);
+
+      // Sự kiện tab Dò Cầu 3 & 4 Số Đuôi
+      $('selectTail34Len').addEventListener('change', () => computeAndRenderTail34(false));
+      $('selectTail34Scope').addEventListener('change', () => computeAndRenderTail34(false));
+      $('selectTail34Order').addEventListener('change', () => computeAndRenderTail34(false));
+      $('selectTail34Bridge').addEventListener('change', renderTail34SelectedBridge);
+      $('selectTail34RefDay').addEventListener('change', renderTail34ReferenceTable);
+      $('btnCopyTail34Dan').addEventListener('click', () => {
+        if (!curTail34Res || !curTail34Res.list.length) return;
+        const idx = Math.min(Math.max(0, Number($('selectTail34Bridge').value || 0)), curTail34Res.list.length - 1);
+        const b = curTail34Res.list[idx];
+        copyTextToClipboard(b.perms.join(', '), `Dàn ${curTail34Res.k}D (${b.perms.length} số)`);
+      });
+
+      // Khởi tạo dữ liệu → dò cầu → vẽ
+      userDays = loadUserDays();
+      rebuildData();
+      computeCaches();
+      initCustomFormulaBuilder();
+      syncManualDate(true);
+      refreshAll();
+      computeAndRenderTail34(false);
+      switchTab('tail34');
+    });
+  </script>
+</body>
+</html>
